@@ -96,6 +96,27 @@ namespace ShapeGame
             this.UpdateSegmentPosition(j, j, seg);
         }
 
+        Boolean isInZoomingMode = false;
+
+        internal void UpdateMapState(Rect screenRect, JointCollection joints)
+        {
+            Boolean newZoomingMode = joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y;
+
+            if(isInZoomingMode != newZoomingMode)
+            {
+                if(newZoomingMode)
+                {
+                    FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
+                }
+                else
+                {
+                    FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
+                }
+
+                isInZoomingMode = newZoomingMode;
+            }
+        }
+
         public void Draw(UIElementCollection children)
         {
             if (!this.IsAlive)
@@ -161,5 +182,6 @@ namespace ShapeGame
                 this.segments.Add(bone, new BoneData(seg));
             }
         }
+
     }
 }

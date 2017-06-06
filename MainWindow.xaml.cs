@@ -318,6 +318,8 @@ namespace ShapeGame
                                 // Spine
                                 player.UpdateBonePosition(skeleton.Joints, JointType.HipCenter, JointType.ShoulderCenter);
                             }
+
+                            player.UpdateMapState(this.screenRect, skeleton.Joints);
                         }
 
                         skeletonSlot++;
@@ -463,23 +465,6 @@ namespace ShapeGame
             // Advance animations, and do hit testing.
             for (int i = 0; i < NumIntraFrames; ++i)
             {
-                foreach (var pair in this.players)
-                {
-                    HitType hit = this.myFallingThings.LookForHits(pair.Value.Segments, pair.Value.GetId());
-                    if ((hit & HitType.Squeezed) != 0)
-                    {
-                        this.squeezeSound.Play();
-                    }
-                    else if ((hit & HitType.Popped) != 0)
-                    {
-                        this.popSound.Play();
-                    }
-                    else if ((hit & HitType.Hand) != 0)
-                    {
-                        this.hitSound.Play();
-                    }
-                }
-
                 this.myFallingThings.AdvanceFrame();
             }
 
