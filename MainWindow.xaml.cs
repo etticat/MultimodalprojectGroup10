@@ -79,6 +79,8 @@ namespace ShapeGame
 
         private SpeechRecognizer mySpeechRecognizer;
         private float zoomLevelState;
+        private float currentPanX = 0;
+        private float currentPanY = 0;
         #endregion Private State
 
         #region ctor + Window Events
@@ -321,6 +323,9 @@ namespace ShapeGame
                             }
 
                             this.zoomLevelState = player.GetZoomState(this.screenRect, skeleton.Joints);
+                            SkeletonPoint movement = player.GetPanState(this.screenRect, skeleton.Joints);
+                            currentPanX += movement.X;
+                            currentPanY += movement.Y;
                         }
 
                         skeletonSlot++;
@@ -454,6 +459,8 @@ namespace ShapeGame
             }
 
             this.zoomlevel.Content = "Zoomlevel: " + this.zoomLevelState;
+            this.panStatus.Content = "X:" + currentPanX + "\nY: " + currentPanY;
+            
             // Advance animations, and do hit testing.
             for (int i = 0; i < NumIntraFrames; ++i)
             {
@@ -478,92 +485,10 @@ namespace ShapeGame
         #region Kinect Speech processing
         private void RecognizerSaidSomething(object sender, SpeechRecognizer.SaidSomethingEventArgs e)
         {
-            FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), e.Matched);
             switch (e.Verb)
             {
-                case SpeechRecognizer.Verbs.Pause:
-                    this.myFallingThings.SetDropRate(0);
-                    this.myFallingThings.SetGravity(0);
-                    break;
-                case SpeechRecognizer.Verbs.Resume:
-                    this.myFallingThings.SetDropRate(this.dropRate);
-                    this.myFallingThings.SetGravity(this.dropGravity);
-                    break;
-                case SpeechRecognizer.Verbs.Reset:
-                    this.dropRate = DefaultDropRate;
-                    this.dropSize = DefaultDropSize;
-                    this.dropGravity = DefaultDropGravity;
-                    this.myFallingThings.SetPolies(PolyType.All);
-                    this.myFallingThings.SetDropRate(this.dropRate);
-                    this.myFallingThings.SetGravity(this.dropGravity);
-                    this.myFallingThings.SetSize(this.dropSize);
-                    this.myFallingThings.SetShapesColor(System.Windows.Media.Color.FromRgb(0, 0, 0), true);
-                    this.myFallingThings.Reset();
-                    break;
-                case SpeechRecognizer.Verbs.DoShapes:
-                    this.myFallingThings.SetPolies(e.Shape);
-                    break;
-                case SpeechRecognizer.Verbs.RandomColors:
-                    this.myFallingThings.SetShapesColor(System.Windows.Media.Color.FromRgb(0, 0, 0), true);
-                    break;
-                case SpeechRecognizer.Verbs.Colorize:
-                    this.myFallingThings.SetShapesColor(e.RgbColor, false);
-                    break;
-                case SpeechRecognizer.Verbs.ShapesAndColors:
-                    this.myFallingThings.SetPolies(e.Shape);
-                    this.myFallingThings.SetShapesColor(e.RgbColor, false);
-                    break;
-                case SpeechRecognizer.Verbs.More:
-                    this.dropRate *= 1.5;
-                    this.myFallingThings.SetDropRate(this.dropRate);
-                    break;
-                case SpeechRecognizer.Verbs.Fewer:
-                    this.dropRate /= 1.5;
-                    this.myFallingThings.SetDropRate(this.dropRate);
-                    break;
-                case SpeechRecognizer.Verbs.Bigger:
-                    this.dropSize *= 1.5;
-                    if (this.dropSize > MaxShapeSize)
-                    {
-                        this.dropSize = MaxShapeSize;
-                    }
-
-                    this.myFallingThings.SetSize(this.dropSize);
-                    break;
-                case SpeechRecognizer.Verbs.Biggest:
-                    this.dropSize = MaxShapeSize;
-                    this.myFallingThings.SetSize(this.dropSize);
-                    break;
-                case SpeechRecognizer.Verbs.Smaller:
-                    this.dropSize /= 1.5;
-                    if (this.dropSize < MinShapeSize)
-                    {
-                        this.dropSize = MinShapeSize;
-                    }
-
-                    this.myFallingThings.SetSize(this.dropSize);
-                    break;
-                case SpeechRecognizer.Verbs.Smallest:
-                    this.dropSize = MinShapeSize;
-                    this.myFallingThings.SetSize(this.dropSize);
-                    break;
-                case SpeechRecognizer.Verbs.Faster:
-                    this.dropGravity *= 1.25;
-                    if (this.dropGravity > 4.0)
-                    {
-                        this.dropGravity = 4.0;
-                    }
-
-                    this.myFallingThings.SetGravity(this.dropGravity);
-                    break;
-                case SpeechRecognizer.Verbs.Slower:
-                    this.dropGravity /= 1.25;
-                    if (this.dropGravity < 0.25)
-                    {
-                        this.dropGravity = 0.25;
-                    }
-
-                    this.myFallingThings.SetGravity(this.dropGravity);
+                case SpeechRecognizer.Verbs.GoToPlace:
+                    FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Go to " + e.Place);
                     break;
             }
         }

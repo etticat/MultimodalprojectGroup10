@@ -4,29 +4,27 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:bm="using:Bing.Maps"
         xmlns:toolkit="clr-namespace:Microsoft.Kinect.Toolkit;assembly=Microsoft.Kinect.Toolkit"
+            xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
+
         Title="Kinect Shape Game" FontStyle="Italic" SizeToContent="WidthAndHeight"
         Loaded="WindowLoaded" Closed="WindowClosed" Closing="WindowClosing">
     <Grid>
-		<StackPanel Orientation="Horizontal" Background="#FF46BC44" Height="688" Width="1238">
-			<StackPanel Orientation="Vertical" Background="#FF46BC44" Height="688" Width="619">
-				<Grid Height="688" Width="619">
+        <StackPanel Orientation="Vertical" Height="688" Width="619">
+            <Grid Height="688" Width="619">
+                <m:Map x:Name="myMap" CredentialsProvider="AvamSrq9EGJDjcQGVI5Vw-FhSljm6IXevrsojRoAEVnGY6MpzELU903eDffsg0g4" Height="688" Width="619" Mode="Aerial"/>
+
                 <Canvas Margin="0" Name="playfield" Height="688" Width="619" SizeChanged="PlayfieldSizeChanged">
-                    <Canvas.Background>
-                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                            <GradientStop Color="#D9040833" Offset="0.238" />
-                            <GradientStop Color="#FF46BC44" Offset="1" />
-                            <GradientStop Color="#E61747B2" Offset="0.811" />
-                        </LinearGradientBrush>
-                    </Canvas.Background>
+
                 </Canvas>
                 <kt:KinectColorViewer Margin="0,18,19,0" HorizontalAlignment="Right" Width="160" Height="120" VerticalAlignment="Top" KinectSensorManager="{Binding}"/>
                 <toolkit:KinectSensorChooserUI x:Name="SensorChooserUI" IsListening="True"  HorizontalAlignment="Center" VerticalAlignment="Top" />
+
                 <Label Name="zoomlevel" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White"></Label>
+                <Label Name="panStatus" VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="White"></Label>
             </Grid>
             <CheckBox x:Name="enableAec" Foreground="White" FontSize="20" Margin="19,0,0,18" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" Checked="EnableAecChecked" Unchecked="EnableAecChecked" IsEnabled="False">
                 Enable Echo Cancellation on Default Speakers
-				</CheckBox>
-			</StackPanel>
-		</StackPanel>
-	</Grid>
+            </CheckBox>
+        </StackPanel>
+    </Grid>
 </Window>

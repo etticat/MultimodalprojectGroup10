@@ -28,7 +28,8 @@ namespace ShapeGame.Utils
         Star7 = 0x20,
         Circle = 0x40,
         Bubble = 0x80,
-        All = 0x7f
+        All = 0x7f,
+        Berlin = 0x81
     }
 
     [Flags]
