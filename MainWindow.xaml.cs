@@ -78,6 +78,7 @@ namespace ShapeGame
         private int playersAlive;
 
         private SpeechRecognizer mySpeechRecognizer;
+        private float zoomLevelState;
         #endregion Private State
 
         #region ctor + Window Events
@@ -139,7 +140,7 @@ namespace ShapeGame
             this.myFallingThings.SetDropRate(this.dropRate);
             this.myFallingThings.SetSize(this.dropSize);
             this.myFallingThings.SetPolies(PolyType.All);
-            this.myFallingThings.SetGameMode(GameMode.Off);
+            this.myFallingThings.StartGame();
 
             this.popSound.Stream = Properties.Resources.Pop_5;
             this.hitSound.Stream = Properties.Resources.Hit_2;
@@ -152,7 +153,7 @@ namespace ShapeGame
             myGameThread.SetApartmentState(ApartmentState.STA);
             myGameThread.Start();
 
-            FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Shapes!");
+            FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Maps!");
         }
 
         private void WindowClosing(object sender, CancelEventArgs e)
@@ -319,7 +320,7 @@ namespace ShapeGame
                                 player.UpdateBonePosition(skeleton.Joints, JointType.HipCenter, JointType.ShoulderCenter);
                             }
 
-                            player.UpdateMapState(this.screenRect, skeleton.Joints);
+                            this.zoomLevelState = player.GetZoomState(this.screenRect, skeleton.Joints);
                         }
 
                         skeletonSlot++;
@@ -343,20 +344,10 @@ namespace ShapeGame
             // Count alive players
             int alive = this.players.Count(player => player.Value.IsAlive);
 
-            if (alive != this.playersAlive)
+            if (0 == this.playersAlive)
             {
-                if (alive == 2)
-                {
-                    this.myFallingThings.SetGameMode(GameMode.TwoPlayer);
-                }
-                else if (alive == 1)
-                {
-                    this.myFallingThings.SetGameMode(GameMode.Solo);
-                }
-                else if (alive == 0)
-                {
-                    this.myFallingThings.SetGameMode(GameMode.Off);
-                }
+
+                this.myFallingThings.StartGame();
 
                 if ((this.playersAlive == 0) && (this.mySpeechRecognizer != null))
                 {
@@ -462,6 +453,7 @@ namespace ShapeGame
                 this.myFallingThings.SetFramerate(1000.0 / this.actualFrameTime);
             }
 
+            this.zoomlevel.Content = "Zoomlevel: " + this.zoomLevelState;
             // Advance animations, and do hit testing.
             for (int i = 0; i < NumIntraFrames; ++i)
             {

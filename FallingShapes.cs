@@ -41,12 +41,6 @@ namespace ShapeGame.Utils
         Popped = 0x08
     }
 
-    public enum GameMode
-    {
-        Off = 0,
-        Solo = 1,
-        TwoPlayer = 2
-    }
 
     // For hit testing, a dictionary of BoneData items, keyed off the endpoints
     // of a segment (Bone) is used.  The velocity of these endpoints is estimated

@@ -50,7 +50,6 @@ namespace ShapeGame
         private double dropRate = 2.0;
         private double shapeSize = 1.0;
         private double baseShapeSize = 20;
-        private GameMode gameMode = GameMode.Off;
         private double gravity = BaseGravity;
         private double gravityFactor = 1.0;
         private double airFriction = BaseAirFriction;
@@ -151,9 +150,8 @@ namespace ShapeGame
             this.scores.Clear();
         }
 
-        public void SetGameMode(GameMode mode)
+        public void StartGame()
         {
-            this.gameMode = mode;
             this.gameStartTime = DateTime.Now;
             this.scores.Clear();
         }
@@ -313,23 +311,7 @@ namespace ShapeGame
                     i++;
                 }
             }
-
-            // Show game timer
-            if (this.gameMode != GameMode.Off)
-            {
-                TimeSpan span = DateTime.Now.Subtract(this.gameStartTime);
-                string text = span.Minutes.ToString(CultureInfo.InvariantCulture) + ":" + span.Seconds.ToString("00");
-
-                Label timeText = MakeSimpleLabel(
-                    text,
-                    new Rect(
-                        0.1 * this.sceneRect.Width, 0.25 * this.sceneRect.Height, 0.89 * this.sceneRect.Width, 0.72 * this.sceneRect.Height),
-                    new SolidColorBrush(System.Windows.Media.Color.FromArgb(160, 255, 255, 255)));
-                timeText.FontSize = Math.Max(1, this.sceneRect.Height / 16);
-                timeText.HorizontalContentAlignment = HorizontalAlignment.Right;
-                timeText.VerticalContentAlignment = VerticalAlignment.Bottom;
-                children.Add(timeText);
-            }
+            
         }
 
         private static double SquaredDistance(double x1, double y1, double x2, double y2)

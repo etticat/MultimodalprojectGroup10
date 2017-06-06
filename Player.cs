@@ -97,25 +97,37 @@ namespace ShapeGame
         }
 
         Boolean isInZoomingMode = false;
+        float permanentZoom = 0;
 
-        internal void UpdateMapState(Rect screenRect, JointCollection joints)
+        internal float GetZoomState(Rect screenRect, JointCollection joints)
         {
-            Boolean newZoomingMode = joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y;
-
-            if(isInZoomingMode != newZoomingMode)
+            float tempZoom = 0;
+            if (isInZoomingMode)
             {
-                if(newZoomingMode)
+                rightHandPoints.Add(joints[JointType.HandRight].Position);
+                tempZoom = rightHandPoints.First().X - rightHandPoints.Last().X;
+            }
+            Boolean newZoomingMode = joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y;
+            if (isInZoomingMode != newZoomingMode)
+            {
+                if (newZoomingMode)
                 {
                     FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
+
                 }
                 else
                 {
                     FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
+                    rightHandPoints.Clear();
+                    permanentZoom += tempZoom;
                 }
 
                 isInZoomingMode = newZoomingMode;
             }
+            return tempZoom + permanentZoom;
         }
+
+        List<SkeletonPoint> rightHandPoints = new List<SkeletonPoint>();
 
         public void Draw(UIElementCollection children)
         {
