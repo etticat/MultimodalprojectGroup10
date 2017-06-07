@@ -63,6 +63,9 @@ namespace ShapeGame
             }
         }
 
+        public Playermode Mode { get => mode; set => mode = value; }
+        public Segment LeftHandSegment { get; private set; }
+
         public int GetId()
         {
             return this.id;
@@ -109,51 +112,40 @@ namespace ShapeGame
         internal float GetZoomState(Rect screenRect, JointCollection joints)
         {
             float tempZoom = 0;
-            if (mode == Playermode.Zoom)
+            if (Mode == Playermode.Zoom)
             {
                 rightHandPoints.Add(joints[JointType.HandRight].Position);
                 tempZoom = rightHandPoints.First().X - rightHandPoints.Last().X;
             }
-            if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && mode != Playermode.Zoom)
+            if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Zoom)
             {
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
-                mode = Playermode.Zoom;
+                Mode = Playermode.Zoom;
             }
-            else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && mode == Playermode.Zoom)
+            else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Zoom)
             {
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
                 rightHandPoints.Clear();
                 permanentZoom += tempZoom;
-                mode= Playermode.None;
-            }
-
-            return tempZoom + permanentZoom;
-        }
-
-        internal SkeletonPoint GetPanState(Rect screenRect, JointCollection joints)
-        {
-            float tempZoom = 0;
-            SkeletonPoint movement = new SkeletonPoint();
-            if (mode == Playermode.Pan)
-            {
-                movement.X = lastLeftHandPoint.X - joints[JointType.HandLeft].Position.X;
-                movement.Y = lastLeftHandPoint.Y - joints[JointType.HandLeft].Position.Y;
-                lastLeftHandPoint = joints[JointType.HandLeft].Position;
+                Mode= Playermode.None;
             }
             
-            if (joints[JointType.HandRight].Position.Y > joints[JointType.Head].Position.Y && mode != Playermode.Pan)
+            
+            if (joints[JointType.HandRight].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Pan)
             {
-                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Paning Mode");
-                lastLeftHandPoint = joints[JointType.HandLeft].Position;
-                mode = Playermode.Pan;
+                Mode = Playermode.Pan;
             }
-            else if (joints[JointType.HandRight].Position.Y <= joints[JointType.Head].Position.Y && mode == Playermode.Pan)
+            else if (joints[JointType.HandRight].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Pan)
             {
-                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Paning Mode");
-                mode = Playermode.None;
+                Mode = Playermode.None;
             }
 
-            return movement;
+            LeftHandSegment = new Segment(
+                (joints[JointType.HandLeft].Position.X * this.playerScale) + this.playerCenter.X,
+                this.playerCenter.Y - (joints[JointType.HandLeft].Position.Y * this.playerScale))
+                        { Radius = this.playerBounds.Height * HandSize / 2 };
+
+            return tempZoom + permanentZoom;
         }
 
         List<SkeletonPoint> rightHandPoints = new List<SkeletonPoint>();

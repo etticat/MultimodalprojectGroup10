@@ -26,16 +26,16 @@ namespace ShapeGame.Speech
             {
                 { "Go to", new WhatSaid { Verb = Verbs.GoToPlace } },
                 { "Switch language", new WhatSaid { Verb = Verbs.SwitchLanguage } },
-             
+                { "Finish", new WhatSaid { Verb = Verbs.Finish} },
+
             };
 
         private readonly Dictionary<string, WhatSaid> placePhrases = new Dictionary<string, WhatSaid>
             {
-                { "London", new WhatSaid { Verb = Verbs.Placerice, Place = Places.London } },
-                { "Berlin", new WhatSaid { Verb = Verbs.Placerice, Place = Places.Berlin } },
-                { "Hospital", new WhatSaid { Verb = Verbs.Placerice, Place = Places.Hospital } },
-                { "New York", new WhatSaid { Verb = Verbs.Placerice, Place = Places.NewYork } },
-                { "San Francisco", new WhatSaid { Verb = Verbs.Placerice, Place = Places.SanFrancisco } },
+                { "London", new WhatSaid { Verb = Verbs.Placerice, Place = Places.London , Longitude= 51.5074, Latitude= 0.1278} },
+                { "Berlin", new WhatSaid { Verb = Verbs.Placerice, Place = Places.Berlin , Longitude= 52.520, Latitude= 13.4050} },
+                { "New York", new WhatSaid { Verb = Verbs.Placerice, Place = Places.NewYork , Longitude= 40.7128, Latitude= -74.0059} },
+                { "San Francisco", new WhatSaid { Verb = Verbs.Placerice, Place = Places.SanFrancisco , Longitude= 37.7749, Latitude= -122.4194} },
             };
         
         private SpeechRecognitionEngine sre;
@@ -67,7 +67,8 @@ namespace ShapeGame.Speech
             None = 0,
             SwitchLanguage,
             GoToPlace,
-            Placerice
+            Placerice,
+            Finish
         }
 
         public EchoCancellationMode EchoCancellationMode
@@ -280,6 +281,8 @@ namespace ShapeGame.Speech
                 if (e.Result.Text.Contains(phrase.Key))
                 {
                     said.Place = phrase.Value.Place;
+                    said.Longitude = phrase.Value.Longitude;
+                    said.Latitude = phrase.Value.Latitude;
                     said.Matched = phrase.Key;
                     break;
                 }
@@ -317,6 +320,9 @@ namespace ShapeGame.Speech
         {
             public Verbs Verb;
             public Places Place;
+
+            public double Longitude { get; internal set; }
+            public double Latitude { get; internal set; }
         }
 
         public class SaidSomethingEventArgs : EventArgs
@@ -324,6 +330,8 @@ namespace ShapeGame.Speech
             public Verbs Verb { get; set; }
 
             public Places Place { get; set; }
+            public Double Latitude { get; set; }
+            public Double Longitude { get; set; }
 
             public System.Windows.Media.Color RgbColor { get; set; }
 

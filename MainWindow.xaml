@@ -11,18 +11,18 @@
     <Grid>
         <StackPanel Orientation="Vertical" Height="688" Width="619">
             <Grid Height="688" Width="619">
-                <m:Map x:Name="myMap" CredentialsProvider="AvamSrq9EGJDjcQGVI5Vw-FhSljm6IXevrsojRoAEVnGY6MpzELU903eDffsg0g4" Height="688" Width="619" Mode="Aerial"/>
+                <m:Map x:Name="myMap" CredentialsProvider="AvamSrq9EGJDjcQGVI5Vw-FhSljm6IXevrsojRoAEVnGY6MpzELU903eDffsg0g4" ZoomLevel="10" Height="688" Width="619" Mode="Aerial"/>
 
-                <Canvas Margin="0" Name="playfield" Height="688" Width="619" SizeChanged="PlayfieldSizeChanged">
+                <Canvas IsHitTestVisible="False" Margin="0" Name="playfield" Height="688" Width="619" SizeChanged="PlayfieldSizeChanged">
 
                 </Canvas>
-                <kt:KinectColorViewer Margin="0,18,19,0" HorizontalAlignment="Right" Width="160" Height="120" VerticalAlignment="Top" KinectSensorManager="{Binding}"/>
-                <toolkit:KinectSensorChooserUI x:Name="SensorChooserUI" IsListening="True"  HorizontalAlignment="Center" VerticalAlignment="Top" />
+                <kt:KinectColorViewer Margin="0,18,19,0" HorizontalAlignment="Right" Width="160" Height="120" VerticalAlignment="Top" KinectSensorManager="{Binding}" IsHitTestVisible="False"/>
+                <toolkit:KinectSensorChooserUI x:Name="SensorChooserUI" IsListening="True"  HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False"  />
 
-                <Label Name="zoomlevel" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White"></Label>
-                <Label Name="panStatus" VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="White"></Label>
+                <Label Name="zoomlevel" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White" IsHitTestVisible="False"></Label>
+                <Label Name="panStatus" VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="White" IsHitTestVisible="False"></Label>
             </Grid>
-            <CheckBox x:Name="enableAec" Foreground="White" FontSize="20" Margin="19,0,0,18" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" Checked="EnableAecChecked" Unchecked="EnableAecChecked" IsEnabled="False">
+            <CheckBox x:Name="enableAec" Foreground="White" FontSize="20" Margin="19,0,0,18" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" Checked="EnableAecChecked" Unchecked="EnableAecChecked" IsEnabled="False">
                 Enable Echo Cancellation on Default Speakers
             </CheckBox>
         </StackPanel>
