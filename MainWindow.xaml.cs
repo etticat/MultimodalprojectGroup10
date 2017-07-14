@@ -87,7 +87,7 @@ namespace ShapeGame
         private double targetFramerate = MaxFramerate;
         private int frameCount;
         private bool runningGameThread;
-        private FallingThings myFallingThings;
+        private FallingShapes myFallingThings;
         private int playersAlive;
 
         private SpeechRecognizer mySpeechRecognizer;
@@ -152,7 +152,7 @@ namespace ShapeGame
         {
             playfield.ClipToBounds = true;
 
-            this.myFallingThings = new FallingThings(MaxShapes, this.targetFramerate, NumIntraFrames);
+            this.myFallingThings = new FallingShapes(MaxShapes, this.targetFramerate, NumIntraFrames);
 
             this.UpdatePlayfieldSize();
 
@@ -167,12 +167,11 @@ namespace ShapeGame
             this.squeezeSound.Stream = Properties.Resources.Squeeze;
 
             this.popSound.Play();
-
+            
             TimeBeginPeriod(TimerResolution);
             var myGameThread = new Thread(this.GameThread);
             myGameThread.SetApartmentState(ApartmentState.STA);
             myGameThread.Start();
-
             FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Maps!");
         }
 
@@ -348,16 +347,17 @@ namespace ShapeGame
                                 if (player.Mode == Player.Playermode.Pan)
                                 {
                                     // Entering pan
-                                    //SetCursorPos(newPanX, newPanY);
-                                    //mouse_event(leftDown, 0, 0, 0, 0);
-
-
+                                    System.Diagnostics.Debug.Write("Enter");
+                                    SetCursorPos(newPanX, newPanY);
+                                    mouse_event(leftDown, 0, 0, 0, 0);
+                                    
                                 }
 
-                                if (player.Mode == Player.Playermode.Pan)
+                                if (player.Mode != Player.Playermode.Pan)
                                 {
                                     // Exiting pan
-                                    //mouse_event(leftUp, 0, 0, 0, 0);
+                                    System.Diagnostics.Debug.Write("Exit");
+                                    mouse_event(leftUp, 0, 0, 0, 0);
 
                                 }
                             }
@@ -365,8 +365,9 @@ namespace ShapeGame
                             else if (lastPlayerMode == Player.Playermode.Pan)
                             {
                                 // Dragging in Pan
-                                //mouse_event(MOUSEEVENTF_ABSOLUTE, (uint)newPanX, (uint)newPanY, 0, 0);
-                                //mouse_event(MOUSEEVENTF_MOVE, (uint)newPanX, (uint)newPanY, 0, 0);
+                                System.Diagnostics.Debug.Write("Drag");
+                                mouse_event(MOUSEEVENTF_ABSOLUTE, (uint)newPanX, (uint)newPanY, 0, 0);
+                              //  mouse_event(MOUSEEVENTF_MOVE, (uint)newPanX, (uint)newPanY, 0, 0);
                             }
                             currentPanX = newPanX;
                             currentPanY = newPanY;

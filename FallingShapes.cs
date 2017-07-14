@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="FallingShapes.cs" company="Microsoft">
+// <copyright file="FallingThings.cs" company="Microsoft">
 //     Copyright (c) Microsoft Corporation.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -8,260 +8,407 @@
 // hit testing against a set of segments provided by the Kinect NUI, and
 // have shapes react accordingly.
 
-namespace ShapeGame.Utils
+namespace ShapeGame
 {
     using System;
+    using System.Collections.Generic;
+    using System.Globalization;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
+    using System.Windows.Shapes;
     using Microsoft.Kinect;
+    using ShapeGame.Utils;
 
-    [Flags]
-    public enum PolyType
+    // FallingThings is the main class to draw and maintain positions of falling shapes.  It also does hit testing
+    // and appropriate bouncing.
+    public class FallingShapes
     {
-        None = 0x00,
-        Triangle = 0x01,
-        Square = 0x02,
-        Star = 0x04,
-        Pentagon = 0x08,
-        Hex = 0x10,
-        Star7 = 0x20,
-        Circle = 0x40,
-        Bubble = 0x80,
-        All = 0x7f,
-        Berlin = 0x81
-    }
+        private const double BaseGravity = 0.017;
+        private const double BaseAirFriction = 0.994;
 
-    [Flags]
-    public enum HitType
-    {
-        None = 0x00,
-        Hand = 0x01,
-        Arm = 0x02,
-        Squeezed = 0x04,
-        Popped = 0x08
-    }
-
-
-    // For hit testing, a dictionary of BoneData items, keyed off the endpoints
-    // of a segment (Bone) is used.  The velocity of these endpoints is estimated
-    // and used during hit testing and updating velocity vectors after a hit.
-    public struct Bone
-    {
-        public JointType Joint1;
-        public JointType Joint2;
-
-        public Bone(JointType j1, JointType j2)
-        {
-            this.Joint1 = j1;
-            this.Joint2 = j2;
-        }
-    }
-
-    public struct Segment
-    {
-        public double X1;
-        public double Y1;
-        public double X2;
-        public double Y2;
-        public double Radius;
-
-        public Segment(double x, double y)
-        {
-            this.Radius = 1;
-            this.X1 = this.X2 = x;
-            this.Y1 = this.Y2 = y;
-        }
-
-        public Segment(double x1, double y1, double x2, double y2)
-        {
-            this.Radius = 1;
-            this.X1 = x1;
-            this.Y1 = y1;
-            this.X2 = x2;
-            this.Y2 = y2;
-        }
-
-        public bool IsCircle()
-        {
-            return (this.X1 == this.X2) && (this.Y1 == this.Y2);
-        }
-    }
-
-    public struct BoneData
-    {
-        public Segment Segment;
-        public Segment LastSegment;
-        public double XVelocity;
-        public double YVelocity;
-        public double XVelocity2;
-        public double YVelocity2;
-        public DateTime TimeLastUpdated;
-
-        private const double Smoothing = 0.8;
-
-        public BoneData(Segment s)
-        {
-            this.Segment = this.LastSegment = s;
-            this.XVelocity = this.YVelocity = 0;
-            this.XVelocity2 = this.YVelocity2 = 0;
-            this.TimeLastUpdated = DateTime.Now;
-        }
-
-        // Update the segment's position and compute a smoothed velocity for the circle or the
-        // endpoints of the segment based on  the time it took it to move from the last position
-        // to the current one.  The velocity is in pixels per second.
-        public void UpdateSegment(Segment s)
-        {
-            this.LastSegment = this.Segment;
-            this.Segment = s;
-            
-            DateTime cur = DateTime.Now;
-            double fMs = cur.Subtract(this.TimeLastUpdated).TotalMilliseconds;
-            if (fMs < 10.0)
+        private readonly Dictionary<PolyType, PolyDef> polyDefs = new Dictionary<PolyType, PolyDef>
             {
-                fMs = 10.0;
+                { PolyType.Triangle, new PolyDef { Sides = 3, Skip = 1 } },
+                { PolyType.Star, new PolyDef { Sides = 5, Skip = 2 } },
+                { PolyType.Pentagon, new PolyDef { Sides = 5, Skip = 1 } },
+                { PolyType.Square, new PolyDef { Sides = 4, Skip = 1 } },
+                { PolyType.Hex, new PolyDef { Sides = 6, Skip = 1 } },
+                { PolyType.Star7, new PolyDef { Sides = 7, Skip = 3 } },
+                { PolyType.Circle, new PolyDef { Sides = 1, Skip = 1 } },
+                { PolyType.Bubble, new PolyDef { Sides = 0, Skip = 1 } }
+            };
+
+        private readonly List<Thing> things = new List<Thing>();
+        private readonly Random rnd = new Random();
+        private readonly int maxThings;
+        private readonly int intraFrames = 1;
+        private readonly Dictionary<int, int> scores = new Dictionary<int, int>();
+        private const double DissolveTime = 0.4;
+        private Rect sceneRect;
+        private double targetFrameRate = 60;
+        private double dropRate = 2.0;
+        private double shapeSize = 1.0;
+        private double baseShapeSize = 20;
+        private double gravity = BaseGravity;
+        private double gravityFactor = 1.0;
+        private double airFriction = BaseAirFriction;
+        private int frameCount;
+        private bool doRandomColors = true;
+        private double expandingRate = 1.0;
+        private System.Windows.Media.Color baseColor = System.Windows.Media.Color.FromRgb(0, 0, 0);
+        private PolyType polyTypes = PolyType.All;
+        private DateTime gameStartTime;
+
+        public FallingShapes(int maxThings, double framerate, int intraFrames)
+        {
+            this.maxThings = maxThings;
+            this.intraFrames = intraFrames;
+            this.targetFrameRate = framerate * intraFrames;
+            this.SetGravity(this.gravityFactor);
+            this.sceneRect.X = this.sceneRect.Y = 0;
+            this.sceneRect.Width = this.sceneRect.Height = 100;
+            this.shapeSize = this.sceneRect.Height * this.baseShapeSize / 1000.0;
+            this.expandingRate = Math.Exp(Math.Log(6.0) / (this.targetFrameRate * DissolveTime));
+        }
+
+        public enum ThingState
+        {
+            Falling = 0,
+            Bouncing = 1,
+            Dissolving = 2,
+            Remove = 3
+        }
+
+        public static Label MakeSimpleLabel(string text, Rect bounds, System.Windows.Media.Brush brush)
+        {
+            Label label = new Label { Content = text };
+            if (bounds.Width != 0)
+            {
+                label.SetValue(Canvas.LeftProperty, bounds.Left);
+                label.SetValue(Canvas.TopProperty, bounds.Top);
+                label.Width = bounds.Width;
+                label.Height = bounds.Height;
             }
 
-            double fps = 1000.0 / fMs;
-            this.TimeLastUpdated = cur;
+            label.Foreground = brush;
+            label.FontFamily = new System.Windows.Media.FontFamily("Arial");
+            label.FontWeight = FontWeight.FromOpenTypeWeight(600);
+            label.FontStyle = FontStyles.Normal;
+            label.HorizontalAlignment = HorizontalAlignment.Center;
+            label.VerticalAlignment = VerticalAlignment.Center;
+            return label;
+        }
 
-            if (this.Segment.IsCircle())
+        public void SetFramerate(double actualFramerate)
+        {
+            this.targetFrameRate = actualFramerate * this.intraFrames;
+            this.expandingRate = Math.Exp(Math.Log(6.0) / (this.targetFrameRate * DissolveTime));
+            if (this.gravityFactor != 0)
             {
-                this.XVelocity = (this.XVelocity * Smoothing) + ((1.0 - Smoothing) * (this.Segment.X1 - this.LastSegment.X1) * fps);
-                this.YVelocity = (this.YVelocity * Smoothing) + ((1.0 - Smoothing) * (this.Segment.Y1 - this.LastSegment.Y1) * fps);
-            }
-            else
-            {
-                this.XVelocity = (this.XVelocity * Smoothing) + ((1.0 - Smoothing) * (this.Segment.X1 - this.LastSegment.X1) * fps);
-                this.YVelocity = (this.YVelocity * Smoothing) + ((1.0 - Smoothing) * (this.Segment.Y1 - this.LastSegment.Y1) * fps);
-                this.XVelocity2 = (this.XVelocity2 * Smoothing) + ((1.0 - Smoothing) * (this.Segment.X2 - this.LastSegment.X2) * fps);
-                this.YVelocity2 = (this.YVelocity2 * Smoothing) + ((1.0 - Smoothing) * (this.Segment.Y2 - this.LastSegment.Y2) * fps);
+                this.SetGravity(this.gravityFactor);
             }
         }
 
-        // Using the velocity calculated above, estimate where the segment is right now.
-        public Segment GetEstimatedSegment(DateTime cur)
+        public void SetBoundaries(Rect r)
         {
-            Segment estimate = this.Segment;
-            double fMs = cur.Subtract(this.TimeLastUpdated).TotalMilliseconds;
-            estimate.X1 += fMs * this.XVelocity / 1000.0;
-            estimate.Y1 += fMs * this.YVelocity / 1000.0;
-            if (this.Segment.IsCircle())
-            {
-                estimate.X2 = estimate.X1;
-                estimate.Y2 = estimate.Y1;
-            }
-            else
-            {
-                estimate.X2 += fMs * this.XVelocity2 / 1000.0;
-                estimate.Y2 += fMs * this.YVelocity2 / 1000.0;
-            }
-
-            return estimate;
-        }
-    }
-
-    // BannerText generates a scrolling or still banner of text (along the bottom of the screen).
-    // Only one banner exists at a time.  Calling NewBanner() will erase the old one and start the new one.
-    public class BannerText
-    {
-        private readonly System.Windows.Media.Color color;
-        private readonly string text;
-        private readonly bool doScroll;
-        private static BannerText myBannerText;
-        private System.Windows.Media.Brush brush;
-        private Label label;
-        private Rect boundsRect;
-        private Rect renderedRect;
-        private double offset;
-
-        public BannerText(string s, Rect rect, bool scroll, System.Windows.Media.Color col)
-        {
-            this.text = s;
-            this.boundsRect = rect;
-            this.doScroll = scroll;
-            this.brush = null;
-            this.label = null;
-            this.color = col;
-            this.offset = this.doScroll ? 1.0 : 0.0;
+            this.sceneRect = r;
+            this.shapeSize = r.Height * this.baseShapeSize / 1000.0;
         }
 
-        public static void NewBanner(string s, Rect rect, bool scroll, System.Windows.Media.Color col)
+        public void SetDropRate(double f)
         {
-            myBannerText = (s != null) ? new BannerText(s, rect, scroll, col) : null;
+            this.dropRate = f;
         }
 
-        public static void UpdateBounds(Rect rect)
+        public void SetSize(double f)
         {
-            if (myBannerText == null)
-            {
-                return;
-            }
-
-            myBannerText.boundsRect = rect;
-            myBannerText.label = null;
+            this.baseShapeSize = f;
+            this.shapeSize = this.sceneRect.Height * this.baseShapeSize / 1000.0;
         }
 
-        public static void Draw(UIElementCollection children)
+        public void SetShapesColor(System.Windows.Media.Color color, bool doRandom)
         {
-            if (myBannerText == null)
-            {
-                return;
-            }
-
-            Label text = myBannerText.GetLabel();
-            if (text == null)
-            {
-                myBannerText = null;
-                return;
-            }
-
-            children.Add(text);
+            this.doRandomColors = doRandom;
+            this.baseColor = color;
         }
 
-        private Label GetLabel()
+        public void Reset()
         {
-            if (this.brush == null)
+            for (int i = 0; i < this.things.Count; i++)
             {
-                this.brush = new SolidColorBrush(this.color);
-            }
-
-            if (this.label == null)
-            {
-                this.label = FallingThings.MakeSimpleLabel(this.text, this.boundsRect, this.brush);
-                if (this.doScroll)
+                Thing thing = this.things[i];
+                if ((thing.State == ThingState.Bouncing) || (thing.State == ThingState.Falling))
                 {
-                    this.label.FontSize = Math.Max(20, this.boundsRect.Height / 30);
-                    this.label.Width = 10000;
+                    thing.State = ThingState.Dissolving;
+                    thing.Dissolve = 0;
+                    this.things[i] = thing;
+                }
+            }
+
+            this.gameStartTime = DateTime.Now;
+            this.scores.Clear();
+        }
+
+        public void StartGame()
+        {
+            this.gameStartTime = DateTime.Now;
+            this.scores.Clear();
+        }
+
+        public void SetGravity(double f)
+        {
+            this.gravityFactor = f;
+            this.gravity = f * BaseGravity / this.targetFrameRate / Math.Sqrt(this.targetFrameRate) / Math.Sqrt(this.intraFrames);
+            this.airFriction = f == 0 ? 0.997 : Math.Exp(Math.Log(1.0 - ((1.0 - BaseAirFriction) / f)) / this.intraFrames);
+
+            if (f == 0)
+            {
+                // Stop all movement as well!
+                for (int i = 0; i < this.things.Count; i++)
+                {
+                    Thing thing = this.things[i];
+                    thing.XVelocity = thing.YVelocity = 0;
+                    this.things[i] = thing;
+                }
+            }
+        }
+
+        public void SetPolies(PolyType polies)
+        {
+            this.polyTypes = polies;
+        }
+        
+
+        public void AdvanceFrame()
+        {
+            // Move all things by one step, accounting for gravity
+            for (int thingIndex = 0; thingIndex < this.things.Count; thingIndex++)
+            {
+                Thing thing = this.things[thingIndex];
+                thing.Center.Offset(thing.XVelocity, thing.YVelocity);
+                thing.YVelocity += this.gravity * this.sceneRect.Height;
+                thing.YVelocity *= this.airFriction;
+                thing.XVelocity *= this.airFriction;
+                thing.Theta += thing.SpinRate;
+
+                // bounce off walls
+                if ((thing.Center.X - thing.Size < 0) || (thing.Center.X + thing.Size > this.sceneRect.Width))
+                {
+                    thing.XVelocity = -thing.XVelocity;
+                    thing.Center.X += thing.XVelocity;
+                }
+
+                // Then get rid of one if any that fall off the bottom
+                if (thing.Center.Y - thing.Size > this.sceneRect.Bottom)
+                {
+                    thing.State = ThingState.Remove;
+                }
+
+                // Get rid of after dissolving.
+                if (thing.State == ThingState.Dissolving)
+                {
+                    thing.Dissolve += 1 / (this.targetFrameRate * DissolveTime);
+                    thing.Size *= this.expandingRate;
+                    if (thing.Dissolve >= 1.0)
+                    {
+                        thing.State = ThingState.Remove;
+                    }
+                }
+
+                this.things[thingIndex] = thing;
+            }
+
+            // Then remove any that should go away now
+            for (int i = 0; i < this.things.Count; i++)
+            {
+                Thing thing = this.things[i];
+                if (thing.State == ThingState.Remove)
+                {
+                    this.things.Remove(thing);
+                    i--;
+                }
+            }
+            
+        }
+
+        public void DrawFrame(UIElementCollection children)
+        {
+            this.frameCount++;
+
+            // Draw all shapes in the scene
+            for (int i = 0; i < this.things.Count; i++)
+            {
+                Thing thing = this.things[i];
+                if (thing.Brush == null)
+                {
+                    thing.Brush = new SolidColorBrush(thing.Color);
+                    double factor = 0.4 + (((double)thing.Color.R + thing.Color.G + thing.Color.B) / 1600);
+                    thing.Brush2 =
+                        new SolidColorBrush(
+                            System.Windows.Media.Color.FromRgb(
+                                (byte)(255 - ((255 - thing.Color.R) * factor)),
+                                (byte)(255 - ((255 - thing.Color.G) * factor)),
+                                (byte)(255 - ((255 - thing.Color.B) * factor))));
+                    thing.BrushPulse = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+                }
+
+                if (thing.State == ThingState.Bouncing)
+                {
+                    // Pulsate edges
+                    double alpha = Math.Cos((0.15 * (thing.FlashCount++) * thing.Hotness) * 0.5) + 0.5;
+
+                    children.Add(
+                        this.MakeSimpleShape(
+                            this.polyDefs[thing.Shape].Sides,
+                            this.polyDefs[thing.Shape].Skip,
+                            thing.Size,
+                            thing.Theta,
+                            thing.Center,
+                            thing.Brush,
+                            thing.BrushPulse,
+                            thing.Size * 0.1,
+                            alpha));
+                    this.things[i] = thing;
                 }
                 else
                 {
-                    this.label.FontSize = Math.Min(
-                        Math.Max(10, this.boundsRect.Width * 2 / this.text.Length), Math.Max(10, this.boundsRect.Height / 20));
-                }
+                    if (thing.State == ThingState.Dissolving)
+                    {
+                        thing.Brush.Opacity = 1.0 - (thing.Dissolve * thing.Dissolve);
+                    }
 
-                this.label.VerticalContentAlignment = VerticalAlignment.Bottom;
-                this.label.HorizontalContentAlignment = this.doScroll
-                                                            ? HorizontalAlignment.Left
-                                                            : HorizontalAlignment.Center;
-                this.label.SetValue(Canvas.LeftProperty, this.offset * this.boundsRect.Width);
+                    children.Add(
+                        this.MakeSimpleShape(
+                            this.polyDefs[thing.Shape].Sides,
+                            this.polyDefs[thing.Shape].Skip,
+                            thing.Size,
+                            thing.Theta,
+                            thing.Center,
+                            thing.Brush,
+                            (thing.State == ThingState.Dissolving) ? null : thing.Brush2,
+                            1,
+                            1));
+                }
             }
 
-            this.renderedRect = new Rect(this.label.RenderSize);
-
-            if (this.doScroll)
+            // Show scores
+            if (this.scores.Count != 0)
             {
-                this.offset -= 0.0015;
-                if (this.offset * this.boundsRect.Width < this.boundsRect.Left - 10000)
+                int i = 0;
+                foreach (var score in this.scores)
                 {
-                    return null;
+                    Label label = MakeSimpleLabel(
+                        score.Value.ToString(CultureInfo.InvariantCulture),
+                        new Rect(
+                            (0.02 + (i * 0.6)) * this.sceneRect.Width,
+                            0.01 * this.sceneRect.Height,
+                            0.4 * this.sceneRect.Width,
+                            0.3 * this.sceneRect.Height), 
+                            new SolidColorBrush(System.Windows.Media.Color.FromArgb(200, 255, 255, 255)));
+                    label.FontSize = Math.Max(1, Math.Min(this.sceneRect.Width / 12, this.sceneRect.Height / 12));
+                    children.Add(label);
+                    i++;
                 }
+            }
+            
+        }
 
-                this.label.SetValue(Canvas.LeftProperty, (this.offset * this.boundsRect.Width) + this.boundsRect.Left);
+        private static double SquaredDistance(double x1, double y1, double x2, double y2)
+        {
+            return ((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1));
+        }
+
+        private void AddToScore(int player, int points, System.Windows.Point center)
+        {
+            if (this.scores.ContainsKey(player))
+            {
+                this.scores[player] = this.scores[player] + points;
+            }
+            else
+            {
+                this.scores.Add(player, points);
             }
 
-            return this.label;
+            FlyingText.NewFlyingText(this.sceneRect.Width / 300, center, "+" + points);
+        }
+        
+        private Shape MakeSimpleShape(
+            int numSides,
+            int skip,
+            double size,
+            double spin,
+            System.Windows.Point center,
+            System.Windows.Media.Brush brush,
+            System.Windows.Media.Brush brushStroke,
+            double strokeThickness,
+            double opacity)
+        {
+            if (numSides <= 1)
+            {
+                var circle = new Ellipse { Width = size * 2, Height = size * 2, Stroke = brushStroke };
+                if (circle.Stroke != null)
+                {
+                    circle.Stroke.Opacity = opacity;
+                }
+
+                circle.StrokeThickness = strokeThickness * ((numSides == 1) ? 1 : 2);
+                circle.Fill = (numSides == 1) ? brush : null;
+                circle.SetValue(Canvas.LeftProperty, center.X - size);
+                circle.SetValue(Canvas.TopProperty, center.Y - size);
+                return circle;
+            }
+
+            var points = new PointCollection(numSides + 2);
+            double theta = spin;
+            for (int i = 0; i <= numSides + 1; ++i)
+            {
+                points.Add(new System.Windows.Point((Math.Cos(theta) * size) + center.X, (Math.Sin(theta) * size) + center.Y));
+                theta = theta + (2.0 * Math.PI * skip / numSides);
+            }
+
+            var polyline = new Polyline { Points = points, Stroke = brushStroke };
+            if (polyline.Stroke != null)
+            {
+                polyline.Stroke.Opacity = opacity;
+            }
+
+            polyline.Fill = brush;
+            polyline.FillRule = FillRule.Nonzero;
+            polyline.StrokeThickness = strokeThickness;
+            return polyline;
+        }
+
+        internal struct PolyDef
+        {
+            public int Sides;
+            public int Skip;
+        }
+
+        // The Thing struct represents a single object that is flying through the air, and
+        // all of its properties.
+        private struct Thing
+        {
+            public System.Windows.Point Center;
+            public double Size;
+            public double Theta;
+            public double SpinRate;
+            public double YVelocity;
+            public double XVelocity;
+            public PolyType Shape;
+            public System.Windows.Media.Color Color;
+            public System.Windows.Media.Brush Brush;
+            public System.Windows.Media.Brush Brush2;
+            public System.Windows.Media.Brush BrushPulse;
+            public double Dissolve;
+            public ThingState State;
+            public DateTime TimeLastHit;
+            public double AvgTimeBetweenHits;
+            public int TouchedBy;               // Last player to touch this thing
+            public int Hotness;                 // Score level
+            public int FlashCount;
+            
+           
         }
     }
 }

@@ -125,6 +125,7 @@ namespace ShapeGame
             else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Zoom)
             {
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
+                tempZoom = rightHandPoints.First().X - rightHandPoints.Last().X;
                 rightHandPoints.Clear();
                 permanentZoom += tempZoom;
                 Mode= Playermode.None;

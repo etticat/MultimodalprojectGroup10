@@ -75,7 +75,7 @@ namespace ShapeGame
 
             if (this.label == null)
             {
-                this.label = FallingThings.MakeSimpleLabel(this.text, new Rect(0, 0, 0, 0), this.brush);
+                this.label = FallingShapes.MakeSimpleLabel(this.text, new Rect(0, 0, 0, 0), this.brush);
             }
 
             this.brush.Opacity = Math.Pow(this.alpha, 1.5);
