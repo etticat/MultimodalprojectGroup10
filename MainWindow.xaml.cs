@@ -66,9 +66,6 @@ namespace ShapeGame
         private const double DefaultDropGravity = 1.0;
 
         private readonly Dictionary<int, Player> players = new Dictionary<int, Player>();
-        private readonly SoundPlayer popSound = new SoundPlayer();
-        private readonly SoundPlayer hitSound = new SoundPlayer();
-        private readonly SoundPlayer squeezeSound = new SoundPlayer();
         private readonly KinectSensorChooser sensorChooser = new KinectSensorChooser();
 
         private double dropRate = DefaultDropRate;
@@ -162,12 +159,6 @@ namespace ShapeGame
             this.myFallingThings.SetPolies(PolyType.All);
             this.myFallingThings.StartGame();
 
-            this.popSound.Stream = Properties.Resources.Pop_5;
-            this.hitSound.Stream = Properties.Resources.Hit_2;
-            this.squeezeSound.Stream = Properties.Resources.Squeeze;
-
-            this.popSound.Play();
-            
             TimeBeginPeriod(TimerResolution);
             var myGameThread = new Thread(this.GameThread);
             myGameThread.SetApartmentState(ApartmentState.STA);
