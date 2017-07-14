@@ -594,6 +594,14 @@ namespace ShapeGame
                     latitude = e.Latitude;
                     longitude = e.Longitude;
                     break;
+                case SpeechRecognizer.Verbs.NavigateTo:
+                    FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigate to " + e.Place);
+                    defaultZoom = 10;
+                    currentSetZoom = 10;
+                    // TODO navigate here 
+                    //this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(e.Longitude, e.Latitude), defaultZoom); }));
+
+                    break;
                 case SpeechRecognizer.Verbs.Finish:
                     Application.Current.MainWindow.Close();
                     break;

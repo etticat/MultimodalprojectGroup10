@@ -25,7 +25,7 @@ namespace ShapeGame.Speech
         private readonly Dictionary<string, WhatSaid> commandPhrases = new Dictionary<string, WhatSaid>
             {
                 { "Go to", new WhatSaid { Verb = Verbs.GoToPlace } },
-                { "Switch language", new WhatSaid { Verb = Verbs.SwitchLanguage } },
+                { "Navigate to", new WhatSaid { Verb = Verbs.NavigateTo } },
                 { "Finish", new WhatSaid { Verb = Verbs.Finish} },
 
             };
@@ -65,7 +65,7 @@ namespace ShapeGame.Speech
         public enum Verbs
         {
             None = 0,
-            SwitchLanguage,
+            NavigateTo,
             GoToPlace,
             Placerice,
             Finish
