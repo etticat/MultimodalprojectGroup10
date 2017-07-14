@@ -35,16 +35,69 @@ namespace ShapeGame
     public partial class MainWindow : Window
     {
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
 
-        private const int leftDown = 0x02;
-        private const int leftUp = 0x04;
-        private const int move = 0x8000;
-        private static bool _dragging;
+        public static class NativeMethods
+        {
 
-        [DllImport("User32.dll")]
-        private static extern bool SetCursorPos(int X, int Y);
+            public static Microsoft.Maps.MapControl.WPF.Location mapLocBeforeClick;
+            public const int InputMouse = 0;
+
+            public const int MouseEventMove = 0x0001;
+            public const int MouseEventLeftDown = 0x0002;
+            public const int MouseEventLeftUp = 0x0004;
+            public const int MouseEventRightDown = 0x08;
+            public const int MouseEventRightUp = 0x10;
+            public const int MouseEventAbsolute = 0x8000;
+
+            public static bool lastLeftDown;
+
+            [DllImport("user32.dll")]
+            public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+
+            //public static void SendMouseInput(int positionX, int positionY, int maxX, int maxY, bool leftDown)
+            public static void SendMouseInput(int positionX, int positionY, int maxX, int maxY, bool leftDown, Map thisMap)
+            {
+                if (positionX > int.MaxValue)
+                    throw new ArgumentOutOfRangeException("positionX");
+                if (positionY > int.MaxValue)
+                    throw new ArgumentOutOfRangeException("positionY");
+
+                // mouse cursor position relative to the screen
+                int mouseCursorX = (positionX * 65535) / maxX;
+                ;
+                int mouseCursorY = (positionY * 65535) / maxY;
+
+
+                // determine if we need to send a mouse down or mouse up event
+                if (!lastLeftDown && leftDown)
+                {
+                    System.Windows.Input.MouseButtonEventArgs eventArgs = new System.Windows.Input.MouseButtonEventArgs(System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount, System.Windows.Input.MouseButton.Left) { RoutedEvent = UIElement.MouseLeftButtonDownEvent };
+                    // triggers the left click event on the map
+                    thisMap.RaiseEvent(eventArgs);
+                    //mouse_event(MouseEventAbsolute | MouseEventMove | MouseEventLeftDown, i[0].MouseInput.X, i[0].MouseInput.Y, 0, 0);
+                    //mouse_event(MouseEventAbsolute | MouseEventMove | MouseEventLeftDown, 0, i[0].MouseInput.Y, 0, 0);
+                    lastLeftDown = leftDown;
+
+                    return;
+                }
+                else if (lastLeftDown && !leftDown)
+                {
+                    mouse_event(MouseEventLeftUp, mouseCursorX, mouseCursorY, 0, 0);
+
+                    lastLeftDown = leftDown;
+                    return;
+                }
+
+                mouse_event(MouseEventAbsolute | MouseEventMove, mouseCursorX, mouseCursorY, 0, 0);
+
+            }
+
+            // resets the mouse event to stop clicking
+            public static void resetMouseEvents()
+            {
+                mouse_event(MouseEventLeftUp, 0, 0, 0, 0);
+            }
+        }
 
         public static readonly DependencyProperty KinectSensorManagerProperty =
             DependencyProperty.Register(
@@ -333,32 +386,30 @@ namespace ShapeGame
                             var newzoomLevelState = player.GetZoomState(this.screenRect, skeleton.Joints);
                             int newPanX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
                             int newPanY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
+
+                            int cursorX = (int) player.RightHandSegment.X1;
+                            int cursorY = (int) player.RightHandSegment.Y1;
+
                             if (lastPlayerMode != player.Mode)
                             {
                                 if (player.Mode == Player.Playermode.Pan)
                                 {
                                     // Entering pan
                                     System.Diagnostics.Debug.Write("Enter");
-                                    SetCursorPos(newPanX, newPanY);
-                                    mouse_event(leftDown, 0, 0, 0, 0);
-                                    
+                                    NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
                                 }
 
                                 if (player.Mode != Player.Playermode.Pan)
                                 {
                                     // Exiting pan
-                                    System.Diagnostics.Debug.Write("Exit");
-                                    mouse_event(leftUp, 0, 0, 0, 0);
+                                    NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
 
                                 }
                             }
 
                             else if (lastPlayerMode == Player.Playermode.Pan)
                             {
-                                // Dragging in Pan
-                                System.Diagnostics.Debug.Write("Drag");
-                                mouse_event(MOUSEEVENTF_ABSOLUTE, (uint)newPanX, (uint)newPanY, 0, 0);
-                              //  mouse_event(MOUSEEVENTF_MOVE, (uint)newPanX, (uint)newPanY, 0, 0);
+                                NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
                             }
                             currentPanX = newPanX;
                             currentPanY = newPanY;
@@ -381,12 +432,6 @@ namespace ShapeGame
                 }
             }
         }
-        private const uint MOUSEEVENTF_MOVE = 0x0001;
-        private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
-        private const uint MOUSEEVENTF_LEFTUP = 0x0004;
-        private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
-        private const uint MOUSEEVENTF_RIGHTUP = 0x0010;
-        private const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
         private void CheckPlayers()
         {
             foreach (var player in this.players)

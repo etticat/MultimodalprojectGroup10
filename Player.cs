@@ -65,6 +65,7 @@ namespace ShapeGame
 
         public Playermode Mode { get => mode; set => mode = value; }
         public Segment LeftHandSegment { get; private set; }
+        public Segment RightHandSegment { get; private set; }
 
         public int GetId()
         {
@@ -145,6 +146,12 @@ namespace ShapeGame
                 (joints[JointType.HandLeft].Position.X * this.playerScale) + this.playerCenter.X,
                 this.playerCenter.Y - (joints[JointType.HandLeft].Position.Y * this.playerScale))
                         { Radius = this.playerBounds.Height * HandSize / 2 };
+
+
+            LeftHandSegment = new Segment(
+                (joints[JointType.HandRight].Position.X * this.playerScale) + this.playerCenter.X,
+                this.playerCenter.Y - (joints[JointType.HandRight].Position.Y * this.playerScale))
+                    { Radius = this.playerBounds.Height * HandSize / 2 };
 
             return tempZoom + permanentZoom;
         }
