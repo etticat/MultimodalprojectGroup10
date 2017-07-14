@@ -141,10 +141,10 @@ namespace ShapeGame
         private int playersAlive;
 
         private SpeechRecognizer mySpeechRecognizer;
-        private float zoomLevelState;
         private int currentPanX = 0;
         private int currentPanY = 0;
         private float defaultZoom = 10;
+        private float currentSetZoom = 10;
         private double latitude;
         private double longitude;
         private SkeletonPoint movement;
@@ -383,7 +383,7 @@ namespace ShapeGame
                                 player.UpdateBonePosition(skeleton.Joints, JointType.HipCenter, JointType.ShoulderCenter);
                             }
 
-                            var newzoomLevelState = player.GetZoomState(this.screenRect, skeleton.Joints);
+                            currentSetZoom += player.GetZoomState(this.screenRect, skeleton.Joints);
                             int newPanX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
                             int newPanY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
 
@@ -415,12 +415,13 @@ namespace ShapeGame
                             currentPanY = newPanY;
                             lastPlayerMode = player.Mode;
 
-                            if (Math.Abs(newzoomLevelState - this.zoomLevelState) > 0.02)
+                            if (Math.Abs(defaultZoom - this.currentSetZoom) > 0.02)
                             {
                                 this.myMap.Dispatcher.Invoke(new Action(() => {
-                                    this.myMap.ZoomLevel = defaultZoom + newzoomLevelState;
+                                    this.myMap.ZoomLevel = defaultZoom;
 
                                 }));
+                                currentSetZoom = defaultZoom;
                             }
                             
 
@@ -556,7 +557,7 @@ namespace ShapeGame
                 this.myFallingThings.SetFramerate(1000.0 / this.actualFrameTime);
             }
 
-            this.zoomlevel.Content = "Zoomlevel: " + this.zoomLevelState;
+            this.zoomlevel.Content = "Zoomlevel: " + this.defaultZoom;
             this.panStatus.Content = "X:" + currentPanX + "\nY: " + currentPanY;
             
             // Advance animations, and do hit testing.
@@ -587,7 +588,9 @@ namespace ShapeGame
             {
                 case SpeechRecognizer.Verbs.GoToPlace:
                     FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Go to " + e.Place);
-                    this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(e.Longitude, e.Latitude), defaultZoom+zoomLevelState); }));
+                    defaultZoom = 10;
+                    currentSetZoom = 10;
+                    this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(e.Longitude, e.Latitude), defaultZoom); }));
                     latitude = e.Latitude;
                     longitude = e.Longitude;
                     break;

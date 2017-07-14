@@ -110,25 +110,29 @@ namespace ShapeGame
         Playermode mode = Playermode.None;
         float permanentZoom = 0;
 
+        float zoomEnterPosition;
+        float timeSinceLastZoom;
+
         internal float GetZoomState(Rect screenRect, JointCollection joints)
         {
             float tempZoom = 0;
             if (Mode == Playermode.Zoom)
             {
-                rightHandPoints.Add(joints[JointType.HandRight].Position);
-                tempZoom = rightHandPoints.First().X - rightHandPoints.Last().X;
+                tempZoom = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks-timeSinceLastZoom) /1000;
+                timeSinceLastZoom = DateTime.Now.Ticks;
             }
             if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Zoom)
             {
+                // Entering zoom 
+                zoomEnterPosition = joints[JointType.HandRight].Position.X;
+                timeSinceLastZoom = DateTime.Now.Ticks;
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
                 Mode = Playermode.Zoom;
             }
             else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Zoom)
             {
+                // Exiting Zoom
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
-                tempZoom = rightHandPoints.First().X - rightHandPoints.Last().X;
-                rightHandPoints.Clear();
-                permanentZoom += tempZoom;
                 Mode= Playermode.None;
             }
             
@@ -155,8 +159,6 @@ namespace ShapeGame
 
             return tempZoom + permanentZoom;
         }
-
-        List<SkeletonPoint> rightHandPoints = new List<SkeletonPoint>();
 
         SkeletonPoint lastLeftHandPoint = new SkeletonPoint();
 
