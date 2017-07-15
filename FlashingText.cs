@@ -9,11 +9,11 @@ namespace ShapeGame
     
     public class FlashingText
     {
-        private static readonly List<FlashingText> FlyingTexts = new List<FlashingText>();
+        private static readonly List<FlashingText> FlashingTexts = new List<FlashingText>();
         private readonly double fontGrow;
         private readonly string text;
-        private System.Windows.Point center;
-        private System.Windows.Media.Brush brush;
+        private Point center;
+        private Brush brush;
         private double fontSize;
         private double alpha;
         private Label label;
@@ -31,22 +31,21 @@ namespace ShapeGame
 
         public static void NewFlyingText(double size, System.Windows.Point center, string s)
         {
-            FlyingTexts.Add(new FlashingText(s, size, center));
+            FlashingTexts.Add(new FlashingText(s, size, center));
         }
-
         public static void Draw(UIElementCollection children)
         {
-            for (int i = 0; i < FlyingTexts.Count; i++)
+            for (int i = 0; i < FlashingTexts.Count; i++)
             {
-                FlashingText flyout = FlyingTexts[i];
+                FlashingText flyout = FlashingTexts[i];
                 if (flyout.alpha <= 0)
                 {
-                    FlyingTexts.Remove(flyout);
+                    FlashingTexts.Remove(flyout);
                     i--;
                 }
             }
 
-            foreach (var flyout in FlyingTexts)
+            foreach (var flyout in FlashingTexts)
             {
                 flyout.Advance();
                 children.Add(flyout.label);

@@ -96,14 +96,10 @@ namespace ShapeGame
         #region Private State
         private const int TimerResolution = 2;  // ms
         private const int NumIntraFrames = 3;
-        private const int MaxShapes = 80;
         private const double MaxFramerate = 70;
         private const double MinFramerate = 15;
         private const double MinShapeSize = 12;
         private const double MaxShapeSize = 90;
-        private const double DefaultDropRate = 2.5;
-        private const double DefaultDropSize = 32.0;
-        private const double DefaultDropGravity = 1.0;
 
         private readonly Dictionary<int, Player> players = new Dictionary<int, Player>();
         private readonly KinectSensorChooser sensorChooser = new KinectSensorChooser();
@@ -123,12 +119,8 @@ namespace ShapeGame
         private bool runningGameThread;
 
         private SpeechRecognizer mySpeechRecognizer;
-        private int currentPanX = 0;
-        private int currentPanY = 0;
         private float defaultZoom = 10;
         private float currentSetZoom = 10;
-        private double latitude;
-        private double longitude;
         private Player.Playermode lastPlayerMode;
 
         private enum TravelMode
@@ -136,8 +128,6 @@ namespace ShapeGame
             Car, Walk, Bike, PublicTransport
         }
         private TravelMode transportMode = TravelMode.Car;
-
-
 
         #endregion Private State
 
@@ -153,7 +143,6 @@ namespace ShapeGame
 
             sensorChooser.Start();
 
-            // Bind the KinectSensor from the sensorChooser to the KinectSensor on the KinectSensorManager
             var kinectSensorBinding = new Binding("Kinect") { Source = this.sensorChooser };
             BindingOperations.SetBinding(this.KinectSensorManager, KinectSensorManager.KinectSensorProperty, kinectSensorBinding);
 
@@ -177,16 +166,12 @@ namespace ShapeGame
             get { return (KinectSensorManager)GetValue(KinectSensorManagerProperty); }
             set { SetValue(KinectSensorManagerProperty, value); }
         }
-
-        // Since the timer resolution defaults to about 10ms precisely, we need to
-        // increase the resolution to get framerates above between 50fps with any
-        // consistency.
+        
         [DllImport("Winmm.dll", EntryPoint = "timeBeginPeriod")]
         private static extern int TimeBeginPeriod(uint period);
 
         private void RestoreWindowState()
         {
-            // Restore window state to that last used
             Rect bounds = Properties.Settings.Default.PrevWinPosition;
             if (bounds.Right != bounds.Left)
             {
@@ -210,7 +195,7 @@ namespace ShapeGame
             myGameThread.SetApartmentState(ApartmentState.STA);
             myGameThread.Start();
 
-            this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(52.520, 13.4050), defaultZoom); }));
+            this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Location(52.520, 13.4050), defaultZoom); }));
         }
 
         private void WindowClosing(object sender, CancelEventArgs e)
@@ -463,7 +448,6 @@ namespace ShapeGame
             {
                 if (!player.Value.IsAlive)
                 {
-                    // Player left scene since we aren't tracking it anymore, so remove from dictionary
                     this.players.Remove(player.Value.GetId());
                     break;
                 }

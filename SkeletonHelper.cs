@@ -76,8 +76,7 @@
             this.TimeLastUpdated = cur;
             
         }
-
-        // Using the velocity calculated above, estimate where the segment is right now.
+        
         public Segment GetEstimatedSegment(DateTime cur)
         {
             Segment estimate = this.Segment;
@@ -90,7 +89,5 @@
 
             return estimate;
         }
-
     }
-
 }
