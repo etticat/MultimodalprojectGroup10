@@ -112,7 +112,7 @@ namespace ShapeGame
         {
             if (Mode == Playermode.Zoom)
             {
-                ZoomChange = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks - timeSinceLastZoom) /2000000;
+                ZoomChange = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks - timeSinceLastZoom) /1000000;
                 timeSinceLastZoom = DateTime.Now.Ticks;
             }
             if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Zoom && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
