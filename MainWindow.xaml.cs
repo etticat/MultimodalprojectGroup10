@@ -3,14 +3,18 @@ namespace ShapeGame
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.ComponentModel;
     using System.Linq;
     using System.Media;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Data;
+    using System.Windows.Input;
+    using System.Windows.Media;
     using System.Windows.Threading;
     using Microsoft.Kinect;
     using Microsoft.Kinect.Toolkit;
@@ -158,14 +162,13 @@ namespace ShapeGame
 
         public void Navigate(Microsoft.Maps.MapControl.WPF.Location start, Microsoft.Maps.MapControl.WPF.Location end)
         {
-            // Showing text
-            FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigating to alexanderplatz");
             // Move camera to university
             this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(
                 start, defaultZoom);
             }));
-            // TODO: Show route from start to end
-            // ....
+
+            BingServices.RouteResult route = CalculateRoute(start, end);
+            ShowRouteOnMap(route);
         }
 
         public KinectSensorManager KinectSensorManager
@@ -384,7 +387,8 @@ namespace ShapeGame
         private void HandleUseCases(Player player, Skeleton skeleton)
         {
             player.UpdateUseCaseMode(this.screenRect, skeleton.Joints);
-            currentSetZoom += player.ZoomChange;
+            if(player.Mode == Player.Playermode.Zoom)
+                currentSetZoom += player.ZoomChange;
 
             cursorX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
             cursorY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
@@ -599,5 +603,118 @@ namespace ShapeGame
         }
 
         #endregion Kinect Speech processing
+
+        
+
+        private BingServices.GeocodeResult GeocodeAddress(string address)
+        {
+            BingServices.GeocodeResult result = null;
+
+            using (BingServices.GeocodeServiceClient client = new BingServices.GeocodeServiceClient("CustomBinding_IGeocodeService"))
+            {
+                BingServices.GeocodeRequest request = new BingServices.GeocodeRequest();
+                request.Credentials = new Credentials() { ApplicationId = (App.Current.Resources["MyCredentials"] as ApplicationIdCredentialsProvider).ApplicationId };
+                request.Query = address;
+
+                result = client.Geocode(request).Results[0];
+            }
+
+            return result;
+        }
+
+        private BingServices.RouteResult CalculateRoute(Location from, Location to)
+        {
+            using (BingServices.RouteServiceClient client = new BingServices.RouteServiceClient("CustomBinding_IRouteService"))
+            {
+
+                BingServices.RouteRequest request = new BingServices.RouteRequest();
+
+                request.Credentials = new Credentials() { ApplicationId = (App.Current.Resources["MyCredentials"] as ApplicationIdCredentialsProvider).ApplicationId };
+                Collection<BingServices.Waypoint> waypoints = new ObservableCollection<BingServices.Waypoint>();
+
+                waypoints.Add(ConvertResultToWayPoint(from));
+                waypoints.Add(ConvertResultToWayPoint(to));
+
+                request.Waypoints = waypoints.ToArray();
+                request.Options = new BingServices.RouteOptions();
+                request.Options.RoutePathType = BingServices.RoutePathType.Points;
+                if (transportMode == TravelMode.Walk || transportMode == TravelMode.Bike)
+                {
+                    request.Options.Mode = BingServices.TravelMode.Walking;
+                }
+                else
+                {
+                    request.Options.Mode = BingServices.TravelMode.Driving;
+                }
+
+                return client.CalculateRoute(request).Result;
+            }
+        }
+        public void ShowRouteOnMap(BingServices.RouteResult newValue)
+        {
+            MapPolyline routeLine = new MapPolyline();
+            routeLine.Locations = new LocationCollection();
+            routeLine.Opacity = 0.65;
+            routeLine.Stroke = new SolidColorBrush(Colors.Blue);
+            routeLine.StrokeThickness = 5.0;
+
+            foreach (BingServices.Location loc in newValue.RoutePath.Points)
+            {
+                routeLine.Locations.Add(new Location(loc.Latitude, loc.Longitude));
+            }
+
+            var routeLineLayer = RouteLineLayer;
+            if (routeLineLayer == null)
+            {
+                routeLineLayer = new MapLayer();
+                SetRouteLineLayer(myMap, routeLineLayer);
+            }
+
+            routeLineLayer.Children.Clear();
+            routeLineLayer.Children.Add(routeLine);
+
+            //Set the map view
+            LocationRect rect = new LocationRect(routeLine.Locations[0], routeLine.Locations[routeLine.Locations.Count - 1]);
+            myMap.SetView(rect);
+            myMap.ZoomLevel -= 1;
+            defaultZoom = (float)myMap.ZoomLevel;
+        }
+
+        public void SetRouteLineLayer(DependencyObject target, MapLayer value)
+        {
+            if (!myMap.Children.Contains(value))
+                myMap.Children.Add(value);
+        }
+
+
+        private static string GetDirectionText(BingServices.ItineraryItem item)
+        {
+            string contentString = item.Text;
+            //Remove tags from the string
+            Regex regex = new Regex("< (.|\n) *?>");
+            contentString = regex.Replace(contentString, string.Empty);
+            return contentString;
+        }
+
+        private BingServices.Waypoint ConvertResultToWayPoint(BingServices.GeocodeResult result)
+        {
+            BingServices.Waypoint waypoint = new BingServices.Waypoint();
+            waypoint.Description = result.DisplayName;
+            waypoint.Location = result.Locations[0];
+            return waypoint;
+        }
+        private BingServices.Waypoint ConvertResultToWayPoint(Location result)
+        {
+            BingServices.Waypoint waypoint = new BingServices.Waypoint();
+            waypoint.Location = new BingServices.Location();
+            waypoint.Location.Longitude = result.Longitude;
+            waypoint.Location.Latitude = result.Latitude;
+            return waypoint;
+        }
+        public class Direction
+        {
+            public string Description { get; set; }
+            public Location Location { get; set; }
+        }
     }
 }

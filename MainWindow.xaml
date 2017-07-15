@@ -4,14 +4,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:bm="using:Bing.Maps"
         xmlns:toolkit="clr-namespace:Microsoft.Kinect.Toolkit;assembly=Microsoft.Kinect.Toolkit"
-            xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
+        xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
 
         Title="Kinect Shape Game" FontStyle="Italic" SizeToContent="WidthAndHeight"
         Loaded="WindowLoaded" Closed="WindowClosed" Closing="WindowClosing">
     <Grid>
         <StackPanel Orientation="Vertical" Height="688" Width="619">
             <Grid Height="688" Width="619">
-                <m:Map x:Name="myMap" CredentialsProvider="AvamSrq9EGJDjcQGVI5Vw-FhSljm6IXevrsojRoAEVnGY6MpzELU903eDffsg0g4" ZoomLevel="10" Height="688" Width="619" Mode="Aerial"/>
+                <m:Map x:Name="myMap" CredentialsProvider="AvamSrq9EGJDjcQGVI5Vw-FhSljm6IXevrsojRoAEVnGY6MpzELU903eDffsg0g4" ZoomLevel="10" Height="688" Width="619" Mode="Aerial" >
+                    <m:MapLayer x:Name="RouteLineLayer" />
+                </m:Map>
 
                 <Canvas IsHitTestVisible="False" Margin="0" Name="playfield" Height="688" Width="619" SizeChanged="PlayfieldSizeChanged">
 

@@ -1,8 +1,9 @@
 ﻿<Application x:Class="ShapeGame.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:bing="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <bing:ApplicationIdCredentialsProvider x:Key="MyCredentials" ApplicationId="AvamSrq9EGJDjcQGVI5Vw-FhSljm6IXevrsojRoAEVnGY6MpzELU903eDffsg0g4" />
     </Application.Resources>
 </Application>

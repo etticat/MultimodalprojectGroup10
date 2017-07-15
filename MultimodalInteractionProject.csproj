@@ -81,6 +81,8 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -98,6 +100,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Connected Services\BingServices\Reference.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
     <Compile Include="Player.cs" />
     <Compile Include="SpeechRecognizer.cs" />
     <Page Include="MainWindow.xaml">
@@ -134,6 +141,46 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="Connected Services\BingServices\common.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\contracts.wsdl" />
+    <None Include="Connected Services\BingServices\contracts.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\GeocodeService.wsdl" />
+    <None Include="Connected Services\BingServices\GeocodeService.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\GeocodeService1.wsdl" />
+    <None Include="Connected Services\BingServices\GeocodeService1.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\GeocodeService2.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\GeocodeService3.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\GeocodeService4.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\route.wsdl" />
+    <None Include="Connected Services\BingServices\route.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\service.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Connected Services\BingServices\ShapeGame.BingServices.GeocodeResponse.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
+    <None Include="Connected Services\BingServices\ShapeGame.BingServices.MajorRoutesResponse.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
+    <None Include="Connected Services\BingServices\ShapeGame.BingServices.RouteResponse.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -175,7 +222,20 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Connected Services\BingServices\configuration91.svcinfo" />
+    <None Include="Connected Services\BingServices\configuration.svcinfo" />
+    <None Include="Connected Services\BingServices\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference.cs</LastGenOutput>
+    </None>
+    <None Include="Connected Services\BingServices\GeocodeService.disco" />
     <Content Include="Scripts\VeJavaScriptIntellisenseHelper.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadataStorage Include="Connected Services\BingServices\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

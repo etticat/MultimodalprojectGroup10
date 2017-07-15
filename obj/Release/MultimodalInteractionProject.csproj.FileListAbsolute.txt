@@ -19,3 +19,5 @@ C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\ShapeGame.Prop
 C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\MultimodalInteractionProject.csproj.GenerateResource.Cache
 C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\ShapeGame.exe
 C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\ShapeGame.pdb
+C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\MultimodalInteractionProject.csprojResolveAssemblyReference.cache
+C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\App.baml

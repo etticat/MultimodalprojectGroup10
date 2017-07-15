@@ -33,8 +33,8 @@ namespace ShapeGame.Speech
         private readonly Dictionary<string, WhatSaid> placePhrases = new Dictionary<string, WhatSaid>
             {
                 { "London", new WhatSaid { Verb = Verbs.Placerice, Place = Places.London , Longitude= 51.5074, Latitude= 0.1278} },
-                { "Home", new WhatSaid { Verb = Verbs.Placerice, Place = Places.London , Longitude= 52.513269, Latitude= 13.437949} },
-                { "University", new WhatSaid { Verb = Verbs.Placerice, Place = Places.London , Longitude= 52.512235, Latitude= 13.326266} },
+                { "Home", new WhatSaid { Verb = Verbs.Placerice, Place = Places.Home , Longitude= 52.513269, Latitude= 13.437949} },
+                { "University", new WhatSaid { Verb = Verbs.Placerice, Place = Places.University, Longitude= 52.512235, Latitude= 13.326266} },
                 { "Berlin", new WhatSaid { Verb = Verbs.Placerice, Place = Places.Berlin , Longitude= 52.520, Latitude= 13.4050} },
                 { "New York", new WhatSaid { Verb = Verbs.Placerice, Place = Places.NewYork , Longitude= 40.7128, Latitude= -74.0059} },
                 { "San Francisco", new WhatSaid { Verb = Verbs.Placerice, Place = Places.SanFrancisco , Longitude= 37.7749, Latitude= -122.4194} },
@@ -60,7 +60,8 @@ namespace ShapeGame.Speech
             Berlin,
             NewYork,
             SanFrancisco,
-            Hospital
+            University, 
+            Home
         }
 
         public enum Verbs
