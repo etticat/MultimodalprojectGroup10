@@ -74,8 +74,6 @@ namespace ShapeGame
                     System.Windows.Input.MouseButtonEventArgs eventArgs = new System.Windows.Input.MouseButtonEventArgs(System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount, System.Windows.Input.MouseButton.Left) { RoutedEvent = UIElement.MouseLeftButtonDownEvent };
                     // triggers the left click event on the map
                     thisMap.RaiseEvent(eventArgs);
-                    //mouse_event(MouseEventAbsolute | MouseEventMove | MouseEventLeftDown, i[0].MouseInput.X, i[0].MouseInput.Y, 0, 0);
-                    //mouse_event(MouseEventAbsolute | MouseEventMove | MouseEventLeftDown, 0, i[0].MouseInput.Y, 0, 0);
                     lastLeftDown = leftDown;
 
                     return;
@@ -149,6 +147,15 @@ namespace ShapeGame
         private double longitude;
         private SkeletonPoint movement;
         private Player.Playermode lastPlayerMode;
+
+        private enum TravelMode
+        {
+            Car, Walk, Bike, PublicTransport
+        }
+        private TravelMode transportMode = TravelMode.Car;
+
+
+
         #endregion Private State
 
         #region ctor + Window Events
@@ -169,6 +176,18 @@ namespace ShapeGame
             BindingOperations.SetBinding(this.KinectSensorManager, KinectSensorManager.KinectSensorProperty, kinectSensorBinding);
 
             this.RestoreWindowState();
+        }
+
+        public void Navigate(Microsoft.Maps.MapControl.WPF.Location start, Microsoft.Maps.MapControl.WPF.Location end)
+        {
+            // Showing text
+            FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigating to alexanderplatz");
+            // Move camera to university
+            this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(
+                start, defaultZoom);
+            }));
+            // TODO: Show route from start to end
+            // ....
         }
 
         public KinectSensorManager KinectSensorManager
@@ -216,7 +235,8 @@ namespace ShapeGame
             var myGameThread = new Thread(this.GameThread);
             myGameThread.SetApartmentState(ApartmentState.STA);
             myGameThread.Start();
-            FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Maps!");
+
+            this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(52.520, 13.4050), defaultZoom); }));
         }
 
         private void WindowClosing(object sender, CancelEventArgs e)
@@ -384,12 +404,41 @@ namespace ShapeGame
                             }
 
                             currentSetZoom += player.GetZoomState(this.screenRect, skeleton.Joints);
-                            int newPanX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
-                            int newPanY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
 
-                            int cursorX = (int) player.RightHandSegment.X1;
-                            int cursorY = (int) player.RightHandSegment.Y1;
+                            int cursorX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
+                            int cursorY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
 
+                            TravelMode newTransportMode;
+                            if (player.RightHandSegment.X1 > player.LeftHandSegment.X1)
+                            {
+                                if (player.RightHandSegment.Y1 > player.LeftHandSegment.Y1)
+                                {
+                                    newTransportMode = TravelMode.Bike;
+                                }
+                                else
+                                {
+                                    newTransportMode = TravelMode.Car;
+                                }
+
+                            }
+                            else
+                            {
+                                if (player.RightHandSegment.Y1 > player.LeftHandSegment.Y1)
+                                {
+                                    newTransportMode = TravelMode.Walk;
+                                }
+                                else
+                                {
+                                    newTransportMode = TravelMode.PublicTransport;
+                                }
+                            }
+                            if(newTransportMode != transportMode)
+                            {
+                                transportMode = newTransportMode;
+                                this.travelMode.Content = "Transport Mode:" + transportMode;
+                            }
+
+                            System.Diagnostics.Debug.Write(" x " + cursorX + " Y " + cursorY);
                             if (lastPlayerMode != player.Mode)
                             {
                                 if (player.Mode == Player.Playermode.Pan)
@@ -406,22 +455,22 @@ namespace ShapeGame
 
                                 }
                             }
-
-                            else if (lastPlayerMode == Player.Playermode.Pan)
+                            if (lastPlayerMode == Player.Playermode.Pan)
                             {
+                                NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
                                 NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
+                                NativeMethods.SendMouseInput(cursorX + 10, cursorY + 10, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
+                                NativeMethods.SendMouseInput(cursorX + 10, cursorY + 10, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
                             }
-                            currentPanX = newPanX;
-                            currentPanY = newPanY;
                             lastPlayerMode = player.Mode;
-
-                            if (Math.Abs(defaultZoom - this.currentSetZoom) > 0.02)
+                            
+                            if (Math.Abs(defaultZoom - this.currentSetZoom) > 0.0001)
                             {
                                 this.myMap.Dispatcher.Invoke(new Action(() => {
-                                    this.myMap.ZoomLevel = defaultZoom;
+                                    this.myMap.ZoomLevel = currentSetZoom;
 
                                 }));
-                                currentSetZoom = defaultZoom;
+                                defaultZoom = currentSetZoom;
                             }
                             
 
@@ -443,26 +492,6 @@ namespace ShapeGame
                     this.players.Remove(player.Value.GetId());
                     break;
                 }
-            }
-
-            // Count alive players
-            int alive = this.players.Count(player => player.Value.IsAlive);
-
-            if (0 == this.playersAlive)
-            {
-
-                this.myFallingThings.StartGame();
-
-                if ((this.playersAlive == 0) && (this.mySpeechRecognizer != null))
-                {
-                    BannerText.NewBanner(
-                        Properties.Resources.Vocabulary,
-                        this.screenRect,
-                        true,
-                        System.Windows.Media.Color.FromArgb(200, 255, 255, 255));
-                }
-
-                this.playersAlive = alive;
             }
         }
 
@@ -595,7 +624,7 @@ namespace ShapeGame
                     longitude = e.Longitude;
                     break;
                 case SpeechRecognizer.Verbs.NavigateTo:
-                    FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigate to " + e.Place);
+                    FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigate to " + e.Place + " using " + transportMode);
                     defaultZoom = 10;
                     currentSetZoom = 10;
                     // TODO navigate here 

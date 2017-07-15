@@ -29,7 +29,7 @@ namespace ShapeGame
         {
             this.text = s;
             this.fontSize = Math.Max(1, size);
-            this.fontGrow = Math.Sqrt(size) * 0.4;
+            this.fontGrow = Math.Sqrt(size) * 0.1;
             this.center = center;
             this.alpha = 1.0;
             this.label = null;
@@ -62,7 +62,7 @@ namespace ShapeGame
 
         private void Advance()
         {
-            this.alpha -= 0.01;
+            this.alpha -= 0.005;
             if (this.alpha < 0)
             {
                 this.alpha = 0;

@@ -19,8 +19,11 @@
                 <kt:KinectColorViewer Margin="0,18,19,0" HorizontalAlignment="Right" Width="160" Height="120" VerticalAlignment="Top" KinectSensorManager="{Binding}" IsHitTestVisible="False"/>
                 <toolkit:KinectSensorChooserUI x:Name="SensorChooserUI" IsListening="True"  HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False"  />
 
-                <Label Name="zoomlevel" VerticalAlignment="Top" HorizontalAlignment="Left" Background="White" IsHitTestVisible="False"></Label>
-                <Label Name="panStatus" VerticalAlignment="Bottom" HorizontalAlignment="Left" Background="White" IsHitTestVisible="False"></Label>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="19,18,19,0">
+                    <Label Name="zoomlevel" FontSize="19" FontStyle="Normal" Background="White" IsHitTestVisible="False"></Label>
+                    <Label Name="travelMode" FontSize="19" FontStyle="Normal" Background="White" IsHitTestVisible="False"></Label>
+                    <Label Name="panStatus" FontSize="19" FontStyle="Normal" Background="White" IsHitTestVisible="False"></Label>
+                </StackPanel>
             </Grid>
             <CheckBox x:Name="enableAec" Foreground="White" FontSize="20" Margin="19,0,0,18" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Bottom" Visibility="Collapsed" Checked="EnableAecChecked" Unchecked="EnableAecChecked" IsEnabled="False">
                 Enable Echo Cancellation on Default Speakers

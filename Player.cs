@@ -111,39 +111,47 @@ namespace ShapeGame
         float permanentZoom = 0;
 
         float zoomEnterPosition;
-        float timeSinceLastZoom;
+        long timeSinceLastZoom;
+        long timeLastModeChange;
 
         internal float GetZoomState(Rect screenRect, JointCollection joints)
         {
             float tempZoom = 0;
             if (Mode == Playermode.Zoom)
             {
-                tempZoom = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks-timeSinceLastZoom) /1000;
+                tempZoom = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks - timeSinceLastZoom) /2000000;
                 timeSinceLastZoom = DateTime.Now.Ticks;
             }
-            if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Zoom)
+            if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Zoom && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
                 // Entering zoom 
                 zoomEnterPosition = joints[JointType.HandRight].Position.X;
                 timeSinceLastZoom = DateTime.Now.Ticks;
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
                 Mode = Playermode.Zoom;
+                timeLastModeChange = DateTime.Now.Ticks;
+
             }
-            else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Zoom)
+            else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Zoom && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
                 // Exiting Zoom
                 FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
                 Mode= Playermode.None;
+                timeLastModeChange = DateTime.Now.Ticks;
             }
             
             
-            if (joints[JointType.HandRight].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Pan)
+            if (joints[JointType.HandRight].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Pan && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
                 Mode = Playermode.Pan;
+                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Panning Mode");
+                timeLastModeChange = DateTime.Now.Ticks;
             }
-            else if (joints[JointType.HandRight].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Pan)
+            else if (joints[JointType.HandRight].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Pan && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
+                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Panning Mode");
                 Mode = Playermode.None;
+                timeLastModeChange = DateTime.Now.Ticks;
             }
 
             LeftHandSegment = new Segment(
@@ -152,12 +160,12 @@ namespace ShapeGame
                         { Radius = this.playerBounds.Height * HandSize / 2 };
 
 
-            LeftHandSegment = new Segment(
+            RightHandSegment = new Segment(
                 (joints[JointType.HandRight].Position.X * this.playerScale) + this.playerCenter.X,
                 this.playerCenter.Y - (joints[JointType.HandRight].Position.Y * this.playerScale))
                     { Radius = this.playerBounds.Height * HandSize / 2 };
-
-            return tempZoom + permanentZoom;
+            
+            return tempZoom;
         }
 
         SkeletonPoint lastLeftHandPoint = new SkeletonPoint();
