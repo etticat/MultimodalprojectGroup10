@@ -17,29 +17,11 @@ namespace ShapeGame.Utils
     using Microsoft.Kinect;
 
     [Flags]
-    public enum PolyType
-    {
-        None = 0x00,
-        Triangle = 0x01,
-        Square = 0x02,
-        Star = 0x04,
-        Pentagon = 0x08,
-        Hex = 0x10,
-        Star7 = 0x20,
-        Circle = 0x40,
-        Bubble = 0x80,
-        All = 0x7f,
-        Berlin = 0x81
-    }
-
-    [Flags]
     public enum HitType
     {
         None = 0x00,
         Hand = 0x01,
         Arm = 0x02,
-        Squeezed = 0x04,
-        Popped = 0x08
     }
 
 

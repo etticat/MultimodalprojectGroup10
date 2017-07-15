@@ -40,7 +40,6 @@ namespace ShapeGame
         private bool doRandomColors = true;
         private double expandingRate = 1.0;
         private System.Windows.Media.Color baseColor = System.Windows.Media.Color.FromRgb(0, 0, 0);
-        private PolyType polyTypes = PolyType.All;
         private DateTime gameStartTime;
 
         public FallingShapes(int maxThings, double framerate, int intraFrames)
@@ -131,11 +130,6 @@ namespace ShapeGame
         public void StartGame()
         {
             this.gameStartTime = DateTime.Now;
-        }
-        
-        public void SetPolies(PolyType polies)
-        {
-            this.polyTypes = polies;
         }
         
 
@@ -279,7 +273,6 @@ namespace ShapeGame
             public double SpinRate;
             public double YVelocity;
             public double XVelocity;
-            public PolyType Shape;
             public System.Windows.Media.Color Color;
             public System.Windows.Media.Brush Brush;
             public System.Windows.Media.Brush Brush2;

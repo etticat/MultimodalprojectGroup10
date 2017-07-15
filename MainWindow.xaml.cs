@@ -227,7 +227,6 @@ namespace ShapeGame
             
             this.myFallingThings.SetDropRate(this.dropRate);
             this.myFallingThings.SetSize(this.dropSize);
-            this.myFallingThings.SetPolies(PolyType.All);
             this.myFallingThings.StartGame();
 
             TimeBeginPeriod(TimerResolution);
