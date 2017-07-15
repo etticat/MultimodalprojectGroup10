@@ -227,7 +227,6 @@ namespace ShapeGame
             
             this.myFallingThings.SetDropRate(this.dropRate);
             this.myFallingThings.SetSize(this.dropSize);
-            this.myFallingThings.StartGame();
 
             TimeBeginPeriod(TimerResolution);
             var myGameThread = new Thread(this.GameThread);
@@ -586,12 +585,6 @@ namespace ShapeGame
             this.zoomlevel.Content = "Zoomlevel: " + this.defaultZoom;
             this.panStatus.Content = "X:" + currentPanX + "\nY: " + currentPanY;
             
-            // Advance animations, and do hit testing.
-            for (int i = 0; i < NumIntraFrames; ++i)
-            {
-                this.myFallingThings.AdvanceFrame();
-            }
-
             // Draw new Wpf scene by adding all objects to canvas
             playfield.Children.Clear();
             this.myFallingThings.DrawFrame(this.playfield.Children);

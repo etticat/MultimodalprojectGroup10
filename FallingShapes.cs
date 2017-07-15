@@ -24,8 +24,6 @@ namespace ShapeGame
     // and appropriate bouncing.
     public class FallingShapes
     {
-
-        private readonly List<Thing> things = new List<Thing>();
         private readonly Random rnd = new Random();
         private readonly int maxThings;
         private readonly int intraFrames = 1;
@@ -110,99 +108,11 @@ namespace ShapeGame
             this.doRandomColors = doRandom;
             this.baseColor = color;
         }
-
-        public void Reset()
-        {
-            for (int i = 0; i < this.things.Count; i++)
-            {
-                Thing thing = this.things[i];
-                if ((thing.State == ThingState.Bouncing) || (thing.State == ThingState.Falling))
-                {
-                    thing.State = ThingState.Dissolving;
-                    thing.Dissolve = 0;
-                    this.things[i] = thing;
-                }
-            }
-
-            this.gameStartTime = DateTime.Now;
-        }
-
-        public void StartGame()
-        {
-            this.gameStartTime = DateTime.Now;
-        }
         
-
-        public void AdvanceFrame()
-        {
-            // Move all things by one step, accounting for gravity
-            for (int thingIndex = 0; thingIndex < this.things.Count; thingIndex++)
-            {
-                Thing thing = this.things[thingIndex];
-                thing.Center.Offset(thing.XVelocity, thing.YVelocity);
-                thing.Theta += thing.SpinRate;
-
-                // bounce off walls
-                if ((thing.Center.X - thing.Size < 0) || (thing.Center.X + thing.Size > this.sceneRect.Width))
-                {
-                    thing.XVelocity = -thing.XVelocity;
-                    thing.Center.X += thing.XVelocity;
-                }
-
-                // Then get rid of one if any that fall off the bottom
-                if (thing.Center.Y - thing.Size > this.sceneRect.Bottom)
-                {
-                    thing.State = ThingState.Remove;
-                }
-
-                // Get rid of after dissolving.
-                if (thing.State == ThingState.Dissolving)
-                {
-                    thing.Dissolve += 1 / (this.targetFrameRate * DissolveTime);
-                    thing.Size *= this.expandingRate;
-                    if (thing.Dissolve >= 1.0)
-                    {
-                        thing.State = ThingState.Remove;
-                    }
-                }
-
-                this.things[thingIndex] = thing;
-            }
-
-            // Then remove any that should go away now
-            for (int i = 0; i < this.things.Count; i++)
-            {
-                Thing thing = this.things[i];
-                if (thing.State == ThingState.Remove)
-                {
-                    this.things.Remove(thing);
-                    i--;
-                }
-            }
-            
-        }
 
         public void DrawFrame(UIElementCollection children)
         {
             this.frameCount++;
-
-            // Draw all shapes in the scene
-            for (int i = 0; i < this.things.Count; i++)
-            {
-                Thing thing = this.things[i];
-                if (thing.Brush == null)
-                {
-                    thing.Brush = new SolidColorBrush(thing.Color);
-                    double factor = 0.4 + (((double)thing.Color.R + thing.Color.G + thing.Color.B) / 1600);
-                    thing.Brush2 =
-                        new SolidColorBrush(
-                            System.Windows.Media.Color.FromRgb(
-                                (byte)(255 - ((255 - thing.Color.R) * factor)),
-                                (byte)(255 - ((255 - thing.Color.G) * factor)),
-                                (byte)(255 - ((255 - thing.Color.B) * factor))));
-                    thing.BrushPulse = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
-                }
-            }
         }
 
         private static double SquaredDistance(double x1, double y1, double x2, double y2)
@@ -262,30 +172,6 @@ namespace ShapeGame
             public int Sides;
             public int Skip;
         }
-
-        // The Thing struct represents a single object that is flying through the air, and
-        // all of its properties.
-        private struct Thing
-        {
-            public System.Windows.Point Center;
-            public double Size;
-            public double Theta;
-            public double SpinRate;
-            public double YVelocity;
-            public double XVelocity;
-            public System.Windows.Media.Color Color;
-            public System.Windows.Media.Brush Brush;
-            public System.Windows.Media.Brush Brush2;
-            public System.Windows.Media.Brush BrushPulse;
-            public double Dissolve;
-            public ThingState State;
-            public DateTime TimeLastHit;
-            public double AvgTimeBetweenHits;
-            public int TouchedBy;               // Last player to touch this thing
-            public int Hotness;                 // Score level
-            public int FlashCount;
-            
-           
-        }
+        
     }
 }
