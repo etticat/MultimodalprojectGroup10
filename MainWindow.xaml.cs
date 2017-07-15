@@ -505,8 +505,7 @@ namespace ShapeGame
             this.screenRect.Y = 0;
             this.screenRect.Width = this.playfield.ActualWidth;
             this.screenRect.Height = this.playfield.ActualHeight;
-
-            BannerText.UpdateBounds(this.screenRect);
+            
 
             this.playerBounds.X = 0;
             this.playerBounds.Width = this.playfield.ActualWidth;
@@ -600,8 +599,7 @@ namespace ShapeGame
             {
                 player.Value.Draw(playfield.Children);
             }
-
-            BannerText.Draw(playfield.Children);
+            
             FlyingText.Draw(playfield.Children);
 
             this.CheckPlayers();
