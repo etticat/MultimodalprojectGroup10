@@ -224,8 +224,7 @@ namespace ShapeGame
             this.myFallingThings = new FallingShapes(MaxShapes, this.targetFramerate, NumIntraFrames);
 
             this.UpdatePlayfieldSize();
-
-            this.myFallingThings.SetGravity(this.dropGravity);
+            
             this.myFallingThings.SetDropRate(this.dropRate);
             this.myFallingThings.SetSize(this.dropSize);
             this.myFallingThings.SetPolies(PolyType.All);

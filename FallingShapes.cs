@@ -24,35 +24,18 @@ namespace ShapeGame
     // and appropriate bouncing.
     public class FallingShapes
     {
-        private const double BaseGravity = 0.017;
-        private const double BaseAirFriction = 0.994;
-
-        private readonly Dictionary<PolyType, PolyDef> polyDefs = new Dictionary<PolyType, PolyDef>
-            {
-                { PolyType.Triangle, new PolyDef { Sides = 3, Skip = 1 } },
-                { PolyType.Star, new PolyDef { Sides = 5, Skip = 2 } },
-                { PolyType.Pentagon, new PolyDef { Sides = 5, Skip = 1 } },
-                { PolyType.Square, new PolyDef { Sides = 4, Skip = 1 } },
-                { PolyType.Hex, new PolyDef { Sides = 6, Skip = 1 } },
-                { PolyType.Star7, new PolyDef { Sides = 7, Skip = 3 } },
-                { PolyType.Circle, new PolyDef { Sides = 1, Skip = 1 } },
-                { PolyType.Bubble, new PolyDef { Sides = 0, Skip = 1 } }
-            };
 
         private readonly List<Thing> things = new List<Thing>();
         private readonly Random rnd = new Random();
         private readonly int maxThings;
         private readonly int intraFrames = 1;
-        private readonly Dictionary<int, int> scores = new Dictionary<int, int>();
         private const double DissolveTime = 0.4;
         private Rect sceneRect;
         private double targetFrameRate = 60;
         private double dropRate = 2.0;
         private double shapeSize = 1.0;
         private double baseShapeSize = 20;
-        private double gravity = BaseGravity;
         private double gravityFactor = 1.0;
-        private double airFriction = BaseAirFriction;
         private int frameCount;
         private bool doRandomColors = true;
         private double expandingRate = 1.0;
@@ -65,7 +48,6 @@ namespace ShapeGame
             this.maxThings = maxThings;
             this.intraFrames = intraFrames;
             this.targetFrameRate = framerate * intraFrames;
-            this.SetGravity(this.gravityFactor);
             this.sceneRect.X = this.sceneRect.Y = 0;
             this.sceneRect.Width = this.sceneRect.Height = 100;
             this.shapeSize = this.sceneRect.Height * this.baseShapeSize / 1000.0;
@@ -104,10 +86,7 @@ namespace ShapeGame
         {
             this.targetFrameRate = actualFramerate * this.intraFrames;
             this.expandingRate = Math.Exp(Math.Log(6.0) / (this.targetFrameRate * DissolveTime));
-            if (this.gravityFactor != 0)
-            {
-                this.SetGravity(this.gravityFactor);
-            }
+
         }
 
         public void SetBoundaries(Rect r)
@@ -147,33 +126,13 @@ namespace ShapeGame
             }
 
             this.gameStartTime = DateTime.Now;
-            this.scores.Clear();
         }
 
         public void StartGame()
         {
             this.gameStartTime = DateTime.Now;
-            this.scores.Clear();
         }
-
-        public void SetGravity(double f)
-        {
-            this.gravityFactor = f;
-            this.gravity = f * BaseGravity / this.targetFrameRate / Math.Sqrt(this.targetFrameRate) / Math.Sqrt(this.intraFrames);
-            this.airFriction = f == 0 ? 0.997 : Math.Exp(Math.Log(1.0 - ((1.0 - BaseAirFriction) / f)) / this.intraFrames);
-
-            if (f == 0)
-            {
-                // Stop all movement as well!
-                for (int i = 0; i < this.things.Count; i++)
-                {
-                    Thing thing = this.things[i];
-                    thing.XVelocity = thing.YVelocity = 0;
-                    this.things[i] = thing;
-                }
-            }
-        }
-
+        
         public void SetPolies(PolyType polies)
         {
             this.polyTypes = polies;
@@ -187,9 +146,6 @@ namespace ShapeGame
             {
                 Thing thing = this.things[thingIndex];
                 thing.Center.Offset(thing.XVelocity, thing.YVelocity);
-                thing.YVelocity += this.gravity * this.sceneRect.Height;
-                thing.YVelocity *= this.airFriction;
-                thing.XVelocity *= this.airFriction;
                 thing.Theta += thing.SpinRate;
 
                 // bounce off walls
@@ -252,86 +208,14 @@ namespace ShapeGame
                                 (byte)(255 - ((255 - thing.Color.B) * factor))));
                     thing.BrushPulse = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
                 }
-
-                if (thing.State == ThingState.Bouncing)
-                {
-                    // Pulsate edges
-                    double alpha = Math.Cos((0.15 * (thing.FlashCount++) * thing.Hotness) * 0.5) + 0.5;
-
-                    children.Add(
-                        this.MakeSimpleShape(
-                            this.polyDefs[thing.Shape].Sides,
-                            this.polyDefs[thing.Shape].Skip,
-                            thing.Size,
-                            thing.Theta,
-                            thing.Center,
-                            thing.Brush,
-                            thing.BrushPulse,
-                            thing.Size * 0.1,
-                            alpha));
-                    this.things[i] = thing;
-                }
-                else
-                {
-                    if (thing.State == ThingState.Dissolving)
-                    {
-                        thing.Brush.Opacity = 1.0 - (thing.Dissolve * thing.Dissolve);
-                    }
-
-                    children.Add(
-                        this.MakeSimpleShape(
-                            this.polyDefs[thing.Shape].Sides,
-                            this.polyDefs[thing.Shape].Skip,
-                            thing.Size,
-                            thing.Theta,
-                            thing.Center,
-                            thing.Brush,
-                            (thing.State == ThingState.Dissolving) ? null : thing.Brush2,
-                            1,
-                            1));
-                }
             }
-
-            // Show scores
-            if (this.scores.Count != 0)
-            {
-                int i = 0;
-                foreach (var score in this.scores)
-                {
-                    Label label = MakeSimpleLabel(
-                        score.Value.ToString(CultureInfo.InvariantCulture),
-                        new Rect(
-                            (0.02 + (i * 0.6)) * this.sceneRect.Width,
-                            0.01 * this.sceneRect.Height,
-                            0.4 * this.sceneRect.Width,
-                            0.3 * this.sceneRect.Height), 
-                            new SolidColorBrush(System.Windows.Media.Color.FromArgb(200, 255, 255, 255)));
-                    label.FontSize = Math.Max(1, Math.Min(this.sceneRect.Width / 12, this.sceneRect.Height / 12));
-                    children.Add(label);
-                    i++;
-                }
-            }
-            
         }
 
         private static double SquaredDistance(double x1, double y1, double x2, double y2)
         {
             return ((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1));
         }
-
-        private void AddToScore(int player, int points, System.Windows.Point center)
-        {
-            if (this.scores.ContainsKey(player))
-            {
-                this.scores[player] = this.scores[player] + points;
-            }
-            else
-            {
-                this.scores.Add(player, points);
-            }
-
-            FlyingText.NewFlyingText(this.sceneRect.Width / 300, center, "+" + points);
-        }
+        
         
         private Shape MakeSimpleShape(
             int numSides,
