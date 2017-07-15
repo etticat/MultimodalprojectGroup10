@@ -225,9 +225,6 @@ namespace ShapeGame
 
             this.UpdatePlayfieldSize();
             
-            this.myFallingThings.SetDropRate(this.dropRate);
-            this.myFallingThings.SetSize(this.dropSize);
-
             TimeBeginPeriod(TimerResolution);
             var myGameThread = new Thread(this.GameThread);
             myGameThread.SetApartmentState(ApartmentState.STA);
@@ -519,10 +516,6 @@ namespace ShapeGame
             Rect fallingBounds = this.playerBounds;
             fallingBounds.Y = 0;
             fallingBounds.Height = playfield.ActualHeight;
-            if (this.myFallingThings != null)
-            {
-                this.myFallingThings.SetBoundaries(fallingBounds);
-            }
         }
         #endregion Kinect Skeleton processing
 

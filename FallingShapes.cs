@@ -85,31 +85,7 @@ namespace ShapeGame
             this.expandingRate = Math.Exp(Math.Log(6.0) / (this.targetFrameRate * DissolveTime));
 
         }
-
-        public void SetBoundaries(Rect r)
-        {
-            this.sceneRect = r;
-            this.shapeSize = r.Height * this.baseShapeSize / 1000.0;
-        }
-
-        public void SetDropRate(double f)
-        {
-            this.dropRate = f;
-        }
-
-        public void SetSize(double f)
-        {
-            this.baseShapeSize = f;
-            this.shapeSize = this.sceneRect.Height * this.baseShapeSize / 1000.0;
-        }
-
-        public void SetShapesColor(System.Windows.Media.Color color, bool doRandom)
-        {
-            this.doRandomColors = doRandom;
-            this.baseColor = color;
-        }
         
-
         public void DrawFrame(UIElementCollection children)
         {
             this.frameCount++;
