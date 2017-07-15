@@ -106,5 +106,7 @@ namespace ShapeGame.Utils
 
             return estimate;
         }
+
     }
+
 }

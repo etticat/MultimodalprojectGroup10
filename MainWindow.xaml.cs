@@ -135,7 +135,6 @@ namespace ShapeGame
         private double targetFramerate = MaxFramerate;
         private int frameCount;
         private bool runningGameThread;
-        private FallingShapes myFallingThings;
         private int playersAlive;
 
         private SpeechRecognizer mySpeechRecognizer;
@@ -220,9 +219,7 @@ namespace ShapeGame
         private void WindowLoaded(object sender, EventArgs e)
         {
             playfield.ClipToBounds = true;
-
-            this.myFallingThings = new FallingShapes(MaxShapes, this.targetFramerate, NumIntraFrames);
-
+            
             this.UpdatePlayfieldSize();
             
             TimeBeginPeriod(TimerResolution);
@@ -572,7 +569,6 @@ namespace ShapeGame
             // Every so often, notify what our actual framerate is
             if ((this.frameCount % 100) == 0)
             {
-                this.myFallingThings.SetFramerate(1000.0 / this.actualFrameTime);
             }
 
             this.zoomlevel.Content = "Zoomlevel: " + this.defaultZoom;
@@ -580,7 +576,6 @@ namespace ShapeGame
             
             // Draw new Wpf scene by adding all objects to canvas
             playfield.Children.Clear();
-            this.myFallingThings.DrawFrame(this.playfield.Children);
             foreach (var player in this.players)
             {
                 player.Value.Draw(playfield.Children);

@@ -42,7 +42,6 @@ namespace ShapeGame.Speech
         
         private SpeechRecognitionEngine sre;
         private KinectAudioSource kinectAudioSource;
-        private bool paused;
         private bool isDisposed;
 
         private SpeechRecognizer()

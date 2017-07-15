@@ -73,11 +73,11 @@ namespace ShapeGame
                 this.brush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 255, 255, 255));
             }
 
+
             if (this.label == null)
             {
-                this.label = FallingShapes.MakeSimpleLabel(this.text, new Rect(0, 0, 0, 0), this.brush);
+                this.label = MakeSimpleLabel(this.text, new Rect(0, 0, 0, 0), this.brush);
             }
-
             this.brush.Opacity = Math.Pow(this.alpha, 1.5);
             this.label.Foreground = this.brush;
             this.fontSize += this.fontGrow;
@@ -85,6 +85,26 @@ namespace ShapeGame
             Rect renderRect = new Rect(this.label.RenderSize);
             this.label.SetValue(Canvas.LeftProperty, this.center.X - (renderRect.Width / 2));
             this.label.SetValue(Canvas.TopProperty, this.center.Y - (renderRect.Height / 2));
+        }
+
+        public Label MakeSimpleLabel(string text, Rect bounds, System.Windows.Media.Brush brush)
+        {
+            Label label = new Label { Content = text };
+            if (bounds.Width != 0)
+            {
+                label.SetValue(Canvas.LeftProperty, bounds.Left);
+                label.SetValue(Canvas.TopProperty, bounds.Top);
+                label.Width = bounds.Width;
+                label.Height = bounds.Height;
+            }
+
+            label.Foreground = brush;
+            label.FontFamily = new System.Windows.Media.FontFamily("Arial");
+            label.FontWeight = FontWeight.FromOpenTypeWeight(600);
+            label.FontStyle = FontStyles.Normal;
+            label.HorizontalAlignment = HorizontalAlignment.Center;
+            label.VerticalAlignment = VerticalAlignment.Center;
+            return label;
         }
     }
 }
