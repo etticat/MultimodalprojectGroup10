@@ -119,8 +119,12 @@ namespace ShapeGame
         private bool runningGameThread;
 
         private SpeechRecognizer mySpeechRecognizer;
+        private int cursorX = 0;
+        private int cursorY = 0;
         private float defaultZoom = 10;
         private float currentSetZoom = 10;
+        private double latitude;
+        private double longitude;
         private Player.Playermode lastPlayerMode;
 
         private enum TravelMode
@@ -128,6 +132,8 @@ namespace ShapeGame
             Car, Walk, Bike, PublicTransport
         }
         private TravelMode transportMode = TravelMode.Car;
+
+
 
         #endregion Private State
 
@@ -143,6 +149,7 @@ namespace ShapeGame
 
             sensorChooser.Start();
 
+            // Bind the KinectSensor from the sensorChooser to the KinectSensor on the KinectSensorManager
             var kinectSensorBinding = new Binding("Kinect") { Source = this.sensorChooser };
             BindingOperations.SetBinding(this.KinectSensorManager, KinectSensorManager.KinectSensorProperty, kinectSensorBinding);
 
@@ -166,12 +173,16 @@ namespace ShapeGame
             get { return (KinectSensorManager)GetValue(KinectSensorManagerProperty); }
             set { SetValue(KinectSensorManagerProperty, value); }
         }
-        
+
+        // Since the timer resolution defaults to about 10ms precisely, we need to
+        // increase the resolution to get framerates above between 50fps with any
+        // consistency.
         [DllImport("Winmm.dll", EntryPoint = "timeBeginPeriod")]
         private static extern int TimeBeginPeriod(uint period);
 
         private void RestoreWindowState()
         {
+            // Restore window state to that last used
             Rect bounds = Properties.Settings.Default.PrevWinPosition;
             if (bounds.Right != bounds.Left)
             {
@@ -195,7 +206,7 @@ namespace ShapeGame
             myGameThread.SetApartmentState(ApartmentState.STA);
             myGameThread.Start();
 
-            this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Location(52.520, 13.4050), defaultZoom); }));
+            this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(52.520, 13.4050), defaultZoom); }));
         }
 
         private void WindowClosing(object sender, CancelEventArgs e)
@@ -375,8 +386,8 @@ namespace ShapeGame
             player.UpdateUseCaseMode(this.screenRect, skeleton.Joints);
             currentSetZoom += player.ZoomChange;
 
-            int cursorX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
-            int cursorY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
+            cursorX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
+            cursorY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
 
             TravelMode newTransportMode;
             if (player.RightHandSegment.X1 > player.LeftHandSegment.X1)
@@ -461,7 +472,6 @@ namespace ShapeGame
 
         private void UpdatePlayfieldSize()
         {
-            // Size of player wrt size of playfield, putting ourselves low on the screen.
             this.screenRect.X = 0;
             this.screenRect.Y = 0;
             this.screenRect.Width = this.playfield.ActualWidth;
@@ -490,12 +500,9 @@ namespace ShapeGame
             this.runningGameThread = true;
             this.predNextFrame = DateTime.Now;
             this.actualFrameTime = 1000.0 / this.targetFramerate;
-
-            // Try to dispatch at as constant of a framerate as possible by sleeping just enough since
-            // the last time we dispatched.
+            
             while (this.runningGameThread)
             {
-                // Calculate average framerate.  
                 DateTime now = DateTime.Now;
                 if (this.lastFrameDrawn == DateTime.MinValue)
                 {
@@ -536,11 +543,11 @@ namespace ShapeGame
         {
 
             this.zoomlevel.Content = "Zoomlevel: " + this.defaultZoom;
-            this.panStatus.Content = "X:" + currentPanX + "\nY: " + currentPanY;
+            this.panStatus.Content = "X:" + cursorX + "\nY: " + cursorY;
             
             // Draw new Wpf scene by adding all objects to canvas
             playfield.Children.Clear();
-            foreach (var player in this.players)
+            foreach (var player in players)
             {
                 player.Value.Draw(playfield.Children);
             }
@@ -557,7 +564,8 @@ namespace ShapeGame
             switch (e.Verb)
             {
                 case SpeechRecognizer.Verbs.GoToPlace:
-                    FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Go to " + e.Place);
+                    FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), 
+                        "Go to " + e.Place);
                     defaultZoom = 10;
                     currentSetZoom = 10;
                     this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Location(e.Longitude, e.Latitude), defaultZoom); }));
@@ -565,7 +573,8 @@ namespace ShapeGame
                     longitude = e.Longitude;
                     break;
                 case SpeechRecognizer.Verbs.NavigateTo:
-                    FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigate to " + e.Place + " using " + transportMode);
+                    FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), 
+                        "Navigate to " + e.Place + " using " + transportMode);
                     defaultZoom = 10;
                     currentSetZoom = 10;
                     Navigate(this.myMap.Center, new Location(e.Longitude, e.Latitude));

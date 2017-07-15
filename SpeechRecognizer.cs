@@ -96,9 +96,7 @@ namespace ShapeGame.Speech
                 }
             }
         }
-
-        // This method exists so that it can be easily called and return safely if the speech prereqs aren't installed.
-        // We isolate the try/catch inside this class, and don't impose the need on the caller.
+        
         public static SpeechRecognizer Create()
         {
             SpeechRecognizer recognizer = null;
