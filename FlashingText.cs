@@ -1,9 +1,4 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="FlyingText.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
+﻿
 namespace ShapeGame
 {
     using System;
@@ -11,12 +6,10 @@ namespace ShapeGame
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
-
-    // FlyingText creates text that flys out from a given point, and fades as it gets bigger.
-    // NewFlyingText() can be called as often as necessary, and there can be many texts flying out at once.
-    public class FlyingText
+    
+    public class FlashingText
     {
-        private static readonly List<FlyingText> FlyingTexts = new List<FlyingText>();
+        private static readonly List<FlashingText> FlyingTexts = new List<FlashingText>();
         private readonly double fontGrow;
         private readonly string text;
         private System.Windows.Point center;
@@ -25,7 +18,7 @@ namespace ShapeGame
         private double alpha;
         private Label label;
 
-        public FlyingText(string s, double size, System.Windows.Point center)
+        public FlashingText(string s, double size, System.Windows.Point center)
         {
             this.text = s;
             this.fontSize = Math.Max(1, size);
@@ -38,14 +31,14 @@ namespace ShapeGame
 
         public static void NewFlyingText(double size, System.Windows.Point center, string s)
         {
-            FlyingTexts.Add(new FlyingText(s, size, center));
+            FlyingTexts.Add(new FlashingText(s, size, center));
         }
 
         public static void Draw(UIElementCollection children)
         {
             for (int i = 0; i < FlyingTexts.Count; i++)
             {
-                FlyingText flyout = FlyingTexts[i];
+                FlashingText flyout = FlyingTexts[i];
                 if (flyout.alpha <= 0)
                 {
                     FlyingTexts.Remove(flyout);

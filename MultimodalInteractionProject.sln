@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShapeGame", "ShapeGame.csproj", "{E61846BF-FE80-4B50-A7FF-CFCD9E4A4815}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultimodalInteractionProject", "MultimodalInteractionProject.csproj", "{E61846BF-FE80-4B50-A7FF-CFCD9E4A4815}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Samples.Kinect.WpfViewers", "..\KinectWpfViewers\Microsoft.Samples.Kinect.WpfViewers.csproj", "{4DE23893-27E7-423F-9BB6-BA21DAC2C45E}"
 EndProject

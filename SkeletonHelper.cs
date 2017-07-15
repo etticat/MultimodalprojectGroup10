@@ -1,26 +1,10 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="FallingShapes.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
-// This module contains code to do display falling shapes, and do
-// hit testing against a set of segments provided by the Kinect NUI, and
-// have shapes react accordingly.
-
-namespace ShapeGame.Utils
+﻿namespace ShapeGame.Utils
 {
     using System;
-    using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Media;
     using Microsoft.Kinect;
 
 
-
-    // For hit testing, a dictionary of BoneData items, keyed off the endpoints
-    // of a segment (Bone) is used.  The velocity of these endpoints is estimated
-    // and used during hit testing and updating velocity vectors after a hit.
+    
     public struct Bone
     {
         public JointType Joint1;

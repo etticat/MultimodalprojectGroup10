@@ -108,8 +108,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="FallingThings.cs" />
-    <Compile Include="FlyingText.cs" />
+    <Compile Include="SkeletonHelper.cs" />
+    <Compile Include="FlashingText.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

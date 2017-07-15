@@ -17,7 +17,6 @@
 
                 </Canvas>
                 <kt:KinectColorViewer Margin="0,18,19,0" HorizontalAlignment="Right" Width="160" Height="120" VerticalAlignment="Top" KinectSensorManager="{Binding}" IsHitTestVisible="False"/>
-                <toolkit:KinectSensorChooserUI x:Name="SensorChooserUI" IsListening="True"  HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False"  />
 
                 <StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="19,18,19,0">
                     <Label Name="zoomlevel" FontSize="19" FontStyle="Normal" Background="White" IsHitTestVisible="False"></Label>

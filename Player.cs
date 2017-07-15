@@ -1,9 +1,4 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="Player.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
+﻿
 namespace ShapeGame
 {
     using System;
@@ -22,7 +17,6 @@ namespace ShapeGame
         private const double HeadSize = 0.075;
         private const double HandSize = 0.03;
 
-        // Keeping track of all bone segments of interest as well as head, hands and feet
         private readonly Dictionary<Bone, BoneData> segments = new Dictionary<Bone, BoneData>();
         private readonly System.Windows.Media.Brush jointsBrush;
         private readonly System.Windows.Media.Brush bonesBrush;
@@ -108,18 +102,17 @@ namespace ShapeGame
         }
 
         Playermode mode = Playermode.None;
-        float permanentZoom = 0;
 
         float zoomEnterPosition;
         long timeSinceLastZoom;
         long timeLastModeChange;
+        public float ZoomChange { get; private set; }
 
-        internal float GetZoomState(Rect screenRect, JointCollection joints)
+        internal void UpdateUseCaseMode(Rect screenRect, JointCollection joints)
         {
-            float tempZoom = 0;
             if (Mode == Playermode.Zoom)
             {
-                tempZoom = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks - timeSinceLastZoom) /2000000;
+                ZoomChange = (joints[JointType.HandRight].Position.X - zoomEnterPosition) * (DateTime.Now.Ticks - timeSinceLastZoom) /2000000;
                 timeSinceLastZoom = DateTime.Now.Ticks;
             }
             if (joints[JointType.HandLeft].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Zoom && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
@@ -127,7 +120,7 @@ namespace ShapeGame
                 // Entering zoom 
                 zoomEnterPosition = joints[JointType.HandRight].Position.X;
                 timeSinceLastZoom = DateTime.Now.Ticks;
-                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
+                FlashingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Zooming Mode");
                 Mode = Playermode.Zoom;
                 timeLastModeChange = DateTime.Now.Ticks;
 
@@ -135,7 +128,7 @@ namespace ShapeGame
             else if (joints[JointType.HandLeft].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Zoom && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
                 // Exiting Zoom
-                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
+                FlashingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Zooming Mode");
                 Mode= Playermode.None;
                 timeLastModeChange = DateTime.Now.Ticks;
             }
@@ -144,12 +137,12 @@ namespace ShapeGame
             if (joints[JointType.HandRight].Position.Y > joints[JointType.Head].Position.Y && Mode != Playermode.Pan && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
                 Mode = Playermode.Pan;
-                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Panning Mode");
+                FlashingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Entering Panning Mode");
                 timeLastModeChange = DateTime.Now.Ticks;
             }
             else if (joints[JointType.HandRight].Position.Y <= joints[JointType.Head].Position.Y && Mode == Playermode.Pan && timeLastModeChange + 10000000 < DateTime.Now.Ticks)
             {
-                FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Panning Mode");
+                FlashingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Leaving Panning Mode");
                 Mode = Playermode.None;
                 timeLastModeChange = DateTime.Now.Ticks;
             }
@@ -165,10 +158,8 @@ namespace ShapeGame
                 this.playerCenter.Y - (joints[JointType.HandRight].Position.Y * this.playerScale))
                     { Radius = this.playerBounds.Height * HandSize / 2 };
             
-            return tempZoom;
         }
 
-        SkeletonPoint lastLeftHandPoint = new SkeletonPoint();
 
         public void Draw(UIElementCollection children)
         {

@@ -1,13 +1,4 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="MainWindow.xaml.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
-// This module contains code to do Kinect NUI initialization,
-// processing, displaying players on screen, and sending updated player
-// positions to the game portion for hit testing.
-
+﻿
 namespace ShapeGame
 {
     using System;
@@ -54,7 +45,6 @@ namespace ShapeGame
             [DllImport("user32.dll")]
             public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
 
-            //public static void SendMouseInput(int positionX, int positionY, int maxX, int maxY, bool leftDown)
             public static void SendMouseInput(int positionX, int positionY, int maxX, int maxY, bool leftDown, Map thisMap)
             {
                 if (positionX > int.MaxValue)
@@ -64,7 +54,6 @@ namespace ShapeGame
 
                 // mouse cursor position relative to the screen
                 int mouseCursorX = (positionX * 65535) / maxX;
-                ;
                 int mouseCursorY = (positionY * 65535) / maxY;
 
 
@@ -118,10 +107,7 @@ namespace ShapeGame
 
         private readonly Dictionary<int, Player> players = new Dictionary<int, Player>();
         private readonly KinectSensorChooser sensorChooser = new KinectSensorChooser();
-
-        private double dropRate = DefaultDropRate;
-        private double dropSize = DefaultDropSize;
-        private double dropGravity = DefaultDropGravity;
+        
         private DateTime lastFrameDrawn = DateTime.MinValue;
         private DateTime predNextFrame = DateTime.MinValue;
         private double actualFrameTime;
@@ -135,7 +121,6 @@ namespace ShapeGame
         private double targetFramerate = MaxFramerate;
         private int frameCount;
         private bool runningGameThread;
-        private int playersAlive;
 
         private SpeechRecognizer mySpeechRecognizer;
         private int currentPanX = 0;
@@ -144,7 +129,6 @@ namespace ShapeGame
         private float currentSetZoom = 10;
         private double latitude;
         private double longitude;
-        private SkeletonPoint movement;
         private Player.Playermode lastPlayerMode;
 
         private enum TravelMode
@@ -167,7 +151,6 @@ namespace ShapeGame
 
             InitializeComponent();
 
-            this.SensorChooserUI.KinectSensorChooser = sensorChooser;
             sensorChooser.Start();
 
             // Bind the KinectSensor from the sensorChooser to the KinectSensor on the KinectSensorManager
@@ -180,7 +163,7 @@ namespace ShapeGame
         public void Navigate(Microsoft.Maps.MapControl.WPF.Location start, Microsoft.Maps.MapControl.WPF.Location end)
         {
             // Showing text
-            FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigating to alexanderplatz");
+            FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigating to alexanderplatz");
             // Move camera to university
             this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(
                 start, defaultZoom);
@@ -393,79 +376,7 @@ namespace ShapeGame
                                 // Spine
                                 player.UpdateBonePosition(skeleton.Joints, JointType.HipCenter, JointType.ShoulderCenter);
                             }
-
-                            currentSetZoom += player.GetZoomState(this.screenRect, skeleton.Joints);
-
-                            int cursorX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
-                            int cursorY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
-
-                            TravelMode newTransportMode;
-                            if (player.RightHandSegment.X1 > player.LeftHandSegment.X1)
-                            {
-                                if (player.RightHandSegment.Y1 > player.LeftHandSegment.Y1)
-                                {
-                                    newTransportMode = TravelMode.Bike;
-                                }
-                                else
-                                {
-                                    newTransportMode = TravelMode.Car;
-                                }
-
-                            }
-                            else
-                            {
-                                if (player.RightHandSegment.Y1 > player.LeftHandSegment.Y1)
-                                {
-                                    newTransportMode = TravelMode.Walk;
-                                }
-                                else
-                                {
-                                    newTransportMode = TravelMode.PublicTransport;
-                                }
-                            }
-                            if(newTransportMode != transportMode)
-                            {
-                                transportMode = newTransportMode;
-                                this.travelMode.Content = "Transport Mode:" + transportMode;
-                            }
-
-                            System.Diagnostics.Debug.Write(" x " + cursorX + " Y " + cursorY);
-                            if (lastPlayerMode != player.Mode)
-                            {
-                                if (player.Mode == Player.Playermode.Pan)
-                                {
-                                    // Entering pan
-                                    System.Diagnostics.Debug.Write("Enter");
-                                    NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
-                                }
-
-                                if (player.Mode != Player.Playermode.Pan)
-                                {
-                                    // Exiting pan
-                                    NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
-
-                                }
-                            }
-                            if (lastPlayerMode == Player.Playermode.Pan)
-                            {
-                                NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
-                                NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
-                                NativeMethods.SendMouseInput(cursorX + 10, cursorY + 10, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
-                                NativeMethods.SendMouseInput(cursorX + 10, cursorY + 10, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
-                            }
-                            lastPlayerMode = player.Mode;
-                            
-                            if (Math.Abs(defaultZoom - this.currentSetZoom) > 0.0001)
-                            {
-                                this.myMap.Dispatcher.Invoke(new Action(() => {
-                                    this.myMap.ZoomLevel = currentSetZoom;
-
-                                }));
-                                defaultZoom = currentSetZoom;
-                            }
-                            
-
-
+                            HandleUseCases(player, skeleton);
                         }
 
                         skeletonSlot++;
@@ -473,6 +384,79 @@ namespace ShapeGame
                 }
             }
         }
+
+        private void HandleUseCases(Player player, Skeleton skeleton)
+        {
+            player.UpdateUseCaseMode(this.screenRect, skeleton.Joints);
+            currentSetZoom += player.ZoomChange;
+
+            int cursorX = (int)(Application.Current.MainWindow.Left + player.LeftHandSegment.X1);
+            int cursorY = (int)(Application.Current.MainWindow.Top + player.LeftHandSegment.Y1);
+
+            TravelMode newTransportMode;
+            if (player.RightHandSegment.X1 > player.LeftHandSegment.X1)
+            {
+                if (player.RightHandSegment.Y1 > player.LeftHandSegment.Y1)
+                {
+                    newTransportMode = TravelMode.Bike;
+                }
+                else
+                {
+                    newTransportMode = TravelMode.Car;
+                }
+
+            }
+            else
+            {
+                if (player.RightHandSegment.Y1 > player.LeftHandSegment.Y1)
+                {
+                    newTransportMode = TravelMode.Walk;
+                }
+                else
+                {
+                    newTransportMode = TravelMode.PublicTransport;
+                }
+            }
+            if (newTransportMode != transportMode)
+            {
+                transportMode = newTransportMode;
+                this.travelMode.Content = "Transport Mode:" + transportMode;
+            }
+
+
+            if (lastPlayerMode != player.Mode)
+            {
+                if (player.Mode == Player.Playermode.Pan)
+                {
+                    // Entering pan
+                    System.Diagnostics.Debug.Write("Enter");
+                    NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
+                }
+
+                if (player.Mode != Player.Playermode.Pan)
+                {
+                    // Exiting pan
+                    NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, false, this.myMap);
+
+                }
+            }
+
+            NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, player.Mode == Player.Playermode.Pan, this.myMap);
+
+
+            lastPlayerMode = player.Mode;
+
+            if (Math.Abs(defaultZoom - this.currentSetZoom) > 0.0001)
+            {
+                this.myMap.Dispatcher.Invoke(new Action(() => {
+                    this.myMap.ZoomLevel = currentSetZoom;
+
+                }));
+                defaultZoom = currentSetZoom;
+            }
+
+        }
+
         private void CheckPlayers()
         {
             foreach (var player in this.players)
@@ -566,10 +550,6 @@ namespace ShapeGame
 
         private void HandleGameTimer(int param)
         {
-            // Every so often, notify what our actual framerate is
-            if ((this.frameCount % 100) == 0)
-            {
-            }
 
             this.zoomlevel.Content = "Zoomlevel: " + this.defaultZoom;
             this.panStatus.Content = "X:" + currentPanX + "\nY: " + currentPanY;
@@ -581,7 +561,7 @@ namespace ShapeGame
                 player.Value.Draw(playfield.Children);
             }
             
-            FlyingText.Draw(playfield.Children);
+            FlashingText.Draw(playfield.Children);
 
             this.CheckPlayers();
         }
@@ -593,20 +573,18 @@ namespace ShapeGame
             switch (e.Verb)
             {
                 case SpeechRecognizer.Verbs.GoToPlace:
-                    FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Go to " + e.Place);
+                    FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Go to " + e.Place);
                     defaultZoom = 10;
                     currentSetZoom = 10;
-                    this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(e.Longitude, e.Latitude), defaultZoom); }));
+                    this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Location(e.Longitude, e.Latitude), defaultZoom); }));
                     latitude = e.Latitude;
                     longitude = e.Longitude;
                     break;
                 case SpeechRecognizer.Verbs.NavigateTo:
-                    FlyingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigate to " + e.Place + " using " + transportMode);
+                    FlashingText.NewFlyingText(this.screenRect.Width / 30, new Point(this.screenRect.Width / 2, this.screenRect.Height / 2), "Navigate to " + e.Place + " using " + transportMode);
                     defaultZoom = 10;
                     currentSetZoom = 10;
-                    // TODO navigate here 
-                    //this.myMap.Dispatcher.Invoke(new Action(() => { this.myMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(e.Longitude, e.Latitude), defaultZoom); }));
-
+                    Navigate(this.myMap.Center, new Location(e.Longitude, e.Latitude));
                     break;
                 case SpeechRecognizer.Verbs.Finish:
                     Application.Current.MainWindow.Close();

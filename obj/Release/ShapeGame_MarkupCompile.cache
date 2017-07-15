@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\x64\Debug\
+C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\obj\Release\
 ShapeGame
 none
 false
-DEBUG;TRACE
+TRACE
 C:\Users\micha\Google Drive\TU\MI\shapegame\ShapeGame\App.xaml
 11151548125
 11634205723
-10285078517
-19-2113028009
+91038057876
+19-1139917162
 MainWindow.xaml;
 
 False
