@@ -429,7 +429,6 @@ namespace ShapeGame
                 if (player.Mode == Player.Playermode.Pan)
                 {
                     // Entering pan
-                    System.Diagnostics.Debug.Write("Enter");
                     NativeMethods.SendMouseInput(cursorX, cursorY, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight, true, this.myMap);
                 }
 
@@ -584,6 +583,7 @@ namespace ShapeGame
                     Navigate(this.myMap.Center, new Location(e.Longitude, e.Latitude));
                     break;
                 case SpeechRecognizer.Verbs.Finish:
+                    System.Diagnostics.Debug.Write("Finish");
                     Application.Current.MainWindow.Close();
                     break;
             }
@@ -676,8 +676,11 @@ namespace ShapeGame
             //Set the map view
             LocationRect rect = new LocationRect(routeLine.Locations[0], routeLine.Locations[routeLine.Locations.Count - 1]);
             myMap.SetView(rect);
-            myMap.ZoomLevel -= 1;
-            defaultZoom = (float)myMap.ZoomLevel;
+            this.myMap.Dispatcher.Invoke(new Action(() => {
+                myMap.ZoomLevel -= 1;
+                defaultZoom = (float)myMap.ZoomLevel;
+                currentSetZoom = defaultZoom;
+            }));
         }
 
         public void SetRouteLineLayer(DependencyObject target, MapLayer value)
